@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Paciente - Sistema Hospitalario{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('listar_pacientes') }}">Pacientes</a></li>
+        <li class="breadcrumb-item active">Nuevo Paciente</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Registrar Nuevo Paciente
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formPaciente">
+                    <div class="row">
+                        <!-- Cédula -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cedula" class="form-label">
+                                <i class="fas fa-id-card"></i> Cédula <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="cedula" name="cedula" 
+                                   required maxlength="10" pattern="[0-9]{10}"
+                                   placeholder="Ej: 1234567890">
+                            <div class="form-text">Solo números, 10 dígitos</div>
+                            <div id="nodoInfo" class="mt-2"></div>
+                        </div>
+
+                        <!-- Ciudad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ciudad" class="form-label">
+                                <i class="fas fa-city"></i> Ciudad <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="ciudad" name="ciudad" required>
+                                <option value="">Seleccione una ciudad</option>
+                                <option value="Quito">Quito</option>
+                                <option value="Guayaquil">Guayaquil</option>
+                                <option value="Cuenca">Cuenca</option>
+                                <option value="Ambato">Ambato</option>
+                                <option value="Machala">Machala</option>
+                                <option value="Manta">Manta</option>
+                                <option value="Portoviejo">Portoviejo</option>
+                                <option value="Loja">Loja</option>
+                                <option value="Riobamba">Riobamba</option>
+                                <option value="Esmeraldas">Esmeraldas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Nombres -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nombres" class="form-label">
+                                <i class="fas fa-user"></i> Nombres <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nombres" name="nombres" 
+                                   required maxlength="100" placeholder="Nombres del paciente">
+                        </div>
+
+                        <!-- Apellidos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="apellidos" class="form-label">
+                                <i class="fas fa-user"></i> Apellidos <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" 
+                                   required maxlength="100" placeholder="Apellidos del paciente">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fecha de Nacimiento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_nacimiento" class="form-label">
+                                <i class="fas fa-calendar"></i> Fecha de Nacimiento <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">
+                                <i class="fas fa-phone"></i> Teléfono
+                            </label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   maxlength="15" placeholder="Ej: 0999123456">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   maxlength="100" placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="col-md-6 mb-3">
+                            <label for="direccion" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Dirección
+                            </label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" 
+                                   maxlength="200" placeholder="Dirección completa">
+                        </div>
+                    </div>
+
+                    <!-- Información de fragmentación -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Información de Fragmentación</h6>
+                        <p class="mb-0">
+                            Los pacientes se distribuyen automáticamente según su cédula:
+                            <br>• <strong>Cédulas pares:</strong> Se almacenan en el nodo de Quito
+                            <br>• <strong>Cédulas impares:</strong> Se almacenan en el nodo de Guayaquil
+                        </p>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_pacientes') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar Paciente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cedulaInput = document.getElementById('cedula');
+    const nodoInfo = document.getElementById('nodoInfo');
+    
+    // Función para mostrar información del nodo
+    function mostrarInfoNodo() {
+        const cedula = cedulaInput.value;
+        if (cedula && cedula.length === 10 && /^\d+$/.test(cedula)) {
+            const esPar = parseInt(cedula) % 2 === 0;
+            const nodo = esPar ? 'Quito' : 'Guayaquil';
+            const color = esPar ? 'primary' : 'success';
+            
+            nodoInfo.innerHTML = `
+                <div class="alert alert-${color} alert-sm">
+                    <i class="fas fa-server"></i> 
+                    Este paciente se almacenará en el nodo de <strong>${nodo}</strong>
+                </div>
+            `;
+        } else {
+            nodoInfo.innerHTML = '';
+        }
+    }
+    
+    // Escuchar cambios en la cédula
+    cedulaInput.addEventListener('input', mostrarInfoNodo);
+    
+    // Validación del formulario
+    const form = document.getElementById('formPaciente');
+    form.addEventListener('submit', function(e) {
+        const cedula = cedulaInput.value;
+        
+        // Validar cédula ecuatoriana (básico)
+        if (cedula.length !== 10 || !/^\d+$/.test(cedula)) {
+            e.preventDefault();
+            alert('La cédula debe tener exactamente 10 dígitos numéricos.');
+            cedulaInput.focus();
+            return false;
+        }
+        
+        // Validar fecha de nacimiento
+        const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+        if (fechaNacimiento) {
+            const fecha = new Date(fechaNacimiento);
+            const hoy = new Date();
+            if (fecha > hoy) {
+                e.preventDefault();
+                alert('La fecha de nacimiento no puede ser futura.');
+                return false;
+            }
+        }
+    });
+    
+    // Solo números en cédula
+    cedulaInput.addEventListener('keypress', function(e) {
+        if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+    
+    // Solo números en teléfono
+    const telefonoInput = document.getElementById('telefono');
+    telefonoInput.addEventListener('keypress', function(e) {
+        if (!/[\d\-\+\(\)\s]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

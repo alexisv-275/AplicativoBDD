@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Paciente - Sistema Hospitalario{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('listar_pacientes') }}">Pacientes</a></li>
+        <li class="breadcrumb-item active">Editar Paciente</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit"></i> Editar Paciente
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formPaciente">
+                    <div class="row">
+                        <!-- Cédula (Solo lectura) -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cedula" class="form-label">
+                                <i class="fas fa-id-card"></i> Cédula
+                            </label>
+                            <input type="text" class="form-control" id="cedula" name="cedula" 
+                                   value="{{ paciente.cedula }}" readonly>
+                            <div class="form-text">La cédula no se puede modificar</div>
+                            <div class="mt-2">
+                                {% if paciente.cedula|int % 2 == 0 %}
+                                    <div class="alert alert-primary alert-sm">
+                                        <i class="fas fa-server"></i> 
+                                        Este paciente está almacenado en el nodo de <strong>Quito</strong>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-success alert-sm">
+                                        <i class="fas fa-server"></i> 
+                                        Este paciente está almacenado en el nodo de <strong>Guayaquil</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Ciudad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ciudad" class="form-label">
+                                <i class="fas fa-city"></i> Ciudad <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="ciudad" name="ciudad" required>
+                                <option value="">Seleccione una ciudad</option>
+                                <option value="Quito" {{ 'selected' if paciente.ciudad == 'Quito' else '' }}>Quito</option>
+                                <option value="Guayaquil" {{ 'selected' if paciente.ciudad == 'Guayaquil' else '' }}>Guayaquil</option>
+                                <option value="Cuenca" {{ 'selected' if paciente.ciudad == 'Cuenca' else '' }}>Cuenca</option>
+                                <option value="Ambato" {{ 'selected' if paciente.ciudad == 'Ambato' else '' }}>Ambato</option>
+                                <option value="Machala" {{ 'selected' if paciente.ciudad == 'Machala' else '' }}>Machala</option>
+                                <option value="Manta" {{ 'selected' if paciente.ciudad == 'Manta' else '' }}>Manta</option>
+                                <option value="Portoviejo" {{ 'selected' if paciente.ciudad == 'Portoviejo' else '' }}>Portoviejo</option>
+                                <option value="Loja" {{ 'selected' if paciente.ciudad == 'Loja' else '' }}>Loja</option>
+                                <option value="Riobamba" {{ 'selected' if paciente.ciudad == 'Riobamba' else '' }}>Riobamba</option>
+                                <option value="Esmeraldas" {{ 'selected' if paciente.ciudad == 'Esmeraldas' else '' }}>Esmeraldas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Nombres -->
+                        <div class="col-md-6 mb-3">
+                            <label for="nombres" class="form-label">
+                                <i class="fas fa-user"></i> Nombres <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nombres" name="nombres" 
+                                   required maxlength="100" value="{{ paciente.nombres }}"
+                                   placeholder="Nombres del paciente">
+                        </div>
+
+                        <!-- Apellidos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="apellidos" class="form-label">
+                                <i class="fas fa-user"></i> Apellidos <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" 
+                                   required maxlength="100" value="{{ paciente.apellidos }}"
+                                   placeholder="Apellidos del paciente">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fecha de Nacimiento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_nacimiento" class="form-label">
+                                <i class="fas fa-calendar"></i> Fecha de Nacimiento <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" 
+                                   required value="{{ paciente.fecha_nacimiento.strftime('%Y-%m-%d') if paciente.fecha_nacimiento else '' }}">
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">
+                                <i class="fas fa-phone"></i> Teléfono
+                            </label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   maxlength="15" value="{{ paciente.telefono or '' }}"
+                                   placeholder="Ej: 0999123456">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   maxlength="100" value="{{ paciente.email or '' }}"
+                                   placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="col-md-6 mb-3">
+                            <label for="direccion" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Dirección
+                            </label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" 
+                                   maxlength="200" value="{{ paciente.direccion or '' }}"
+                                   placeholder="Dirección completa">
+                        </div>
+                    </div>
+
+                    <!-- Información importante -->
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Importante</h6>
+                        <p class="mb-0">
+                            La cédula no se puede modificar ya que determina la fragmentación de datos.
+                            Los cambios se aplicarán en el nodo correspondiente automáticamente.
+                        </p>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_pacientes') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Actualizar Paciente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación del formulario
+    const form = document.getElementById('formPaciente');
+    form.addEventListener('submit', function(e) {
+        // Validar fecha de nacimiento
+        const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+        if (fechaNacimiento) {
+            const fecha = new Date(fechaNacimiento);
+            const hoy = new Date();
+            if (fecha > hoy) {
+                e.preventDefault();
+                alert('La fecha de nacimiento no puede ser futura.');
+                return false;
+            }
+        }
+    });
+    
+    // Solo números en teléfono
+    const telefonoInput = document.getElementById('telefono');
+    telefonoInput.addEventListener('keypress', function(e) {
+        if (!/[\d\-\+\(\)\s]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

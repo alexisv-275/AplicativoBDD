@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Sistema Hospitalario Distribuido{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-light p-5 rounded">
+            <h1 class="display-4">
+                <i class="fas fa-hospital text-primary"></i> 
+                Sistema Hospitalario Distribuido
+            </h1>
+            <p class="lead">
+                Plataforma unificada para la gestión de pacientes en múltiples nodos hospitalarios
+            </p>
+            <hr class="my-4">
+            <p>
+                Este sistema integra las bases de datos de los hospitales de <strong>Quito</strong> y 
+                <strong>Guayaquil</strong> utilizando vistas particionadas actualizables, 
+                permitiendo operaciones CRUD transparentes sobre una base de datos distribuida.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Card Pacientes -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Gestión de Pacientes</h5>
+                <p class="card-text">
+                    Administra los registros de pacientes de ambos nodos hospitalarios de forma unificada.
+                </p>
+                <a href="{{ url_for('listar_pacientes') }}" class="btn btn-primary">
+                    <i class="fas fa-users"></i> Ver Pacientes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Nuevo Paciente -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Nuevo Paciente</h5>
+                <p class="card-text">
+                    Registra un nuevo paciente en el sistema. La fragmentación se maneja automáticamente.
+                </p>
+                <a href="{{ url_for('nuevo_paciente') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Agregar Paciente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Estadísticas -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Estadísticas</h5>
+                <p class="card-text">
+                    Visualiza estadísticas y métricas de la distribución de datos entre nodos.
+                </p>
+                <a href="{{ url_for('estadisticas') }}" class="btn btn-info">
+                    <i class="fas fa-chart-bar"></i> Ver Estadísticas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Información del sistema -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-info-circle"></i> Arquitectura del Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-building text-primary"></i> Nodo Quito</h6>
+                        <ul>
+                            <li>Gestiona pacientes con cédulas pares</li>
+                            <li>Base de datos: Hospital_Quito</li>
+                            <li>Fragmentación Horizontal Primaria</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-building text-success"></i> Nodo Guayaquil</h6>
+                        <ul>
+                            <li>Gestiona pacientes con cédulas impares</li>
+                            <li>Base de datos: Hospital_Guayaquil</li>
+                            <li>Fragmentación Horizontal Primaria</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <p class="mb-0">
+                    <strong>Tecnologías:</strong> Flask, PyODBC, SQL Server, Vistas Particionadas Actualizables, 
+                    Fragmentación Horizontal Primaria (FHP)
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
