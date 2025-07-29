@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes - Sistema Hospitalario{% endblock %}
+{% block page_title %}Gestión de Pacientes{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <!-- Header con botón agregar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-people"></i> Gestión de Pacientes</h2>
+            <p class="text-muted">Administre la información de pacientes distribuida entre Quito y Guayaquil</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Paciente
+            </button>
+        </div>
+    </div>
+
+    <!-- Búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o ID...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todos los hospitales</option>
+                <option>Hospital 001</option>
+                <option>Hospital 002</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todos los sexos</option>
+                <option>Masculino</option>
+                <option>Femenino</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de pacientes -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-table"></i> Lista de Pacientes
+                <span class="badge bg-secondary ms-2">1,245 registros</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID Hosp</th>
+                            <th class="text-center" style="width: 80px;">ID Pac</th>
+                            <th style="width: 120px;">Nombre</th>
+                            <th style="width: 120px;">Apellido</th>
+                            <th style="width: 180px;">Dirección</th>
+                            <th class="text-center" style="width: 100px;">F. Nac</th>
+                            <th class="text-center" style="width: 50px;">Sexo</th>
+                            <th style="width: 100px;">Teléfono</th>
+                            <th class="text-center" style="width: 80px;">Nodo</th>
+                            <th class="text-center" style="width: 100px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>1001</strong></td>
+                            <td>Juan Carlos</td>
+                            <td>Pérez García</td>
+                            <td>Av. Amazonas 123, Quito</td>
+                            <td class="text-center">15/03/1985</td>
+                            <td class="text-center">M</td>
+                            <td>0998765432</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>1002</strong></td>
+                            <td>María Elena</td>
+                            <td>González López</td>
+                            <td>Cdla. Kennedy, Guayaquil</td>
+                            <td class="text-center">22/07/1990</td>
+                            <td class="text-center">F</td>
+                            <td>0987654321</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>1003</strong></td>
+                            <td>Carlos Alberto</td>
+                            <td>Martínez Silva</td>
+                            <td>La Carolina, Quito</td>
+                            <td class="text-center">10/12/1978</td>
+                            <td class="text-center">M</td>
+                            <td>0999876543</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>1004</strong></td>
+                            <td>Ana Lucía</td>
+                            <td>Rodríguez Vega</td>
+                            <td>Urdesa Central, Guayaquil</td>
+                            <td class="text-center">05/09/1995</td>
+                            <td class="text-center">F</td>
+                            <td>0986543210</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>1005</strong></td>
+                            <td>Roberto</td>
+                            <td>Jiménez Castro</td>
+                            <td>El Batán, Quito</td>
+                            <td class="text-center">18/11/1982</td>
+                            <td class="text-center">M</td>
+                            <td>0997654321</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>1006</strong></td>
+                            <td>Patricia</td>
+                            <td>Morales Herrera</td>
+                            <td>Los Ceibos, Guayaquil</td>
+                            <td class="text-center">25/04/1988</td>
+                            <td class="text-center">F</td>
+                            <td>0985432109</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small>
+                    <i class="bi bi-mouse"></i> Desplázate para ver más registros • 
+                    <strong>6 de 1,245</strong> pacientes mostrados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

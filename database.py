@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 # Cargar variables de entorno
 load_dotenv()
-
 class DatabaseConnection:
     """Clase para manejar las conexiones a ambos nodos de la base de datos distribuida"""
     

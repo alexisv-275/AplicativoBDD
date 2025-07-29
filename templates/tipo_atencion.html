@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Tipos de Atención - Sistema Hospitalario{% endblock %}
+{% block page_title %}Tipos de Atención{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <!-- Header con botón agregar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-clipboard-pulse"></i> Tipos de Atención</h2>
+            <p class="text-muted">Gestione los diferentes tipos de atención médica disponibles</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Tipo
+            </button>
+        </div>
+    </div>
+
+    <!-- Búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por ID o tipo de atención...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select">
+                <option>Todos los tipos</option>
+                <option>Consulta</option>
+                <option>Emergencia</option>
+                <option>Control</option>
+                <option>Cirugía</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de tipos de atención -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list-check"></i> Catálogo de Tipos de Atención
+                <span class="badge bg-secondary ms-2">8 tipos</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="text-center" style="width: 150px;">ID Tipo</th>
+                            <th style="width: 300px;">Tipo</th>
+                            <th class="text-center" style="width: 150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center"><strong>1</strong></td>
+                            <td>Consulta General</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>2</strong></td>
+                            <td>Consulta Especializada</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>3</strong></td>
+                            <td>Emergencia</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>4</strong></td>
+                            <td>Control Médico</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>5</strong></td>
+                            <td>Cirugía Menor</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>6</strong></td>
+                            <td>Cirugía Mayor</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>7</strong></td>
+                            <td>Hospitalización</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>8</strong></td>
+                            <td>Telemedicina</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small>
+                    <i class="bi bi-mouse"></i> Desplázate para ver más tipos • 
+                    <strong>8 de 8</strong> tipos de atención mostrados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

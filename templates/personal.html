@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Médico - Sistema Hospitalario{% endblock %}
+{% block page_title %}Personal Médico{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <!-- Header con botón agregar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-person-badge"></i> Personal Médico</h2>
+            <p class="text-muted">Gestione el personal médico distribuido entre ambos nodos (tabla fragmentada unificada)</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Personal
+            </button>
+        </div>
+    </div>
+
+    <!-- Búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o ID personal...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todos los hospitales</option>
+                <option>Hospital 001</option>
+                <option>Hospital 002</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todas las especialidades</option>
+                <option>Cardiología</option>
+                <option>Pediatría</option>
+                <option>Ginecología</option>
+                <option>Medicina General</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select class="form-select">
+                <option>Todos los nodos</option>
+                <option>Quito</option>
+                <option>Guayaquil</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de personal médico (fragmentada unificada) -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-people-fill"></i> Personal Médico (Vista Unificada)
+                <span class="badge bg-secondary ms-2">28 empleados</span>
+                <small class="text-muted ms-2">• Datos distribuidos en fragmentos horizontales</small>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID Hosp</th>
+                            <th class="text-center" style="width: 90px;">ID Personal</th>
+                            <th class="text-center" style="width: 90px;">ID Esp</th>
+                            <th style="width: 120px;">Nombre</th>
+                            <th style="width: 120px;">Apellido</th>
+                            <th style="width: 110px;">Teléfono</th>
+                            <th class="text-center" style="width: 100px;">Salario</th>
+                            <th class="text-center" style="width: 110px;">F. Contrato</th>
+                            <th class="text-center" style="width: 80px;">Nodo</th>
+                            <th class="text-center" style="width: 120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Personal del Hospital 001 (Quito) -->
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>301</strong></td>
+                            <td class="text-center">1</td>
+                            <td>Carlos Alberto</td>
+                            <td>Ruiz Mendoza</td>
+                            <td>0987654321</td>
+                            <td class="text-center">$3,500</td>
+                            <td class="text-center">15/03/2020</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>302</strong></td>
+                            <td class="text-center">2</td>
+                            <td>María Elena</td>
+                            <td>González Castro</td>
+                            <td>0998765432</td>
+                            <td class="text-center">$3,200</td>
+                            <td class="text-center">22/08/2019</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>303</strong></td>
+                            <td class="text-center">3</td>
+                            <td>Roberto</td>
+                            <td>Jiménez Silva</td>
+                            <td>0987123456</td>
+                            <td class="text-center">$3,800</td>
+                            <td class="text-center">10/01/2018</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>304</strong></td>
+                            <td class="text-center">4</td>
+                            <td>Ana Lucía</td>
+                            <td>Morales Herrera</td>
+                            <td>0996543210</td>
+                            <td class="text-center">$2,800</td>
+                            <td class="text-center">05/11/2021</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Personal del Hospital 002 (Guayaquil) -->
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>305</strong></td>
+                            <td class="text-center">1</td>
+                            <td>Luis Fernando</td>
+                            <td>Vásquez Proaño</td>
+                            <td>0985432109</td>
+                            <td class="text-center">$3,600</td>
+                            <td class="text-center">18/06/2019</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>306</strong></td>
+                            <td class="text-center">2</td>
+                            <td>Patricia</td>
+                            <td>Rodríguez Lara</td>
+                            <td>0984321098</td>
+                            <td class="text-center">$3,100</td>
+                            <td class="text-center">25/04/2020</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>307</strong></td>
+                            <td class="text-center">5</td>
+                            <td>Diego Andrés</td>
+                            <td>Martínez Vera</td>
+                            <td>0983210987</td>
+                            <td class="text-center">$4,200</td>
+                            <td class="text-center">12/09/2017</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>308</strong></td>
+                            <td class="text-center">6</td>
+                            <td>Carmen Rosa</td>
+                            <td>Salinas Torres</td>
+                            <td>0982109876</td>
+                            <td class="text-center">$3,900</td>
+                            <td class="text-center">30/01/2018</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small>
+                    <i class="bi bi-mouse"></i> Desplázate para ver más personal • 
+                    <strong>8 de 28</strong> empleados mostrados • 
+                    <span class="text-info">Vista unificada de fragmentos distribuidos</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

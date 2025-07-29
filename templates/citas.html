@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Atenciones Médicas - Sistema Hospitalario{% endblock %}
+{% block page_title %}Atenciones Médicas{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <!-- Header con botón agregar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-heart-pulse"></i> Atenciones Médicas</h2>
+            <p class="text-muted">Consulte y gestione el historial de atenciones médicas de los pacientes</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nueva Atención
+            </button>
+        </div>
+    </div>
+
+    <!-- Búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por ID paciente, diagnóstico o tratamiento...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todos los hospitales</option>
+                <option>Hospital 001</option>
+                <option>Hospital 002</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select">
+                <option>Todos los tipos</option>
+                <option>Consulta General</option>
+                <option>Emergencia</option>
+                <option>Control</option>
+                <option>Cirugía</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de atenciones médicas -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-clipboard2-pulse"></i> Registro de Atenciones Médicas
+                <span class="badge bg-secondary ms-2">1,892 atenciones</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID Hosp</th>
+                            <th class="text-center" style="width: 90px;">ID Atención</th>
+                            <th class="text-center" style="width: 90px;">ID Personal</th>
+                            <th class="text-center" style="width: 90px;">ID Paciente</th>
+                            <th class="text-center" style="width: 80px;">ID Tipo</th>
+                            <th class="text-center" style="width: 100px;">Fecha</th>
+                            <th style="width: 200px;">Diagnóstico</th>
+                            <th style="width: 180px;">Descripción</th>
+                            <th style="width: 180px;">Tratamiento</th>
+                            <th class="text-center" style="width: 80px;">Nodo</th>
+                            <th class="text-center" style="width: 100px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>2001</strong></td>
+                            <td class="text-center">301</td>
+                            <td class="text-center">1001</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">25/01/2025</td>
+                            <td>Hipertensión arterial</td>
+                            <td>Control rutinario, presión elevada</td>
+                            <td>Medicación antihipertensiva</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>2002</strong></td>
+                            <td class="text-center">302</td>
+                            <td class="text-center">1002</td>
+                            <td class="text-center">2</td>
+                            <td class="text-center">25/01/2025</td>
+                            <td>Resfriado común</td>
+                            <td>Síntomas gripales, fiebre leve</td>
+                            <td>Reposo, paracetamol 500mg</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>2003</strong></td>
+                            <td class="text-center">303</td>
+                            <td class="text-center">1003</td>
+                            <td class="text-center">3</td>
+                            <td class="text-center">24/01/2025</td>
+                            <td>Gastritis aguda</td>
+                            <td>Dolor abdominal, náuseas</td>
+                            <td>Dieta blanda, omeprazol 20mg</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>2004</strong></td>
+                            <td class="text-center">304</td>
+                            <td class="text-center">1004</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">24/01/2025</td>
+                            <td>Control prenatal</td>
+                            <td>Embarazo 20 semanas, evolución normal</td>
+                            <td>Ácido fólico, controles mensuales</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>001</strong></td>
+                            <td class="text-center"><strong>2005</strong></td>
+                            <td class="text-center">305</td>
+                            <td class="text-center">1005</td>
+                            <td class="text-center">4</td>
+                            <td class="text-center">23/01/2025</td>
+                            <td>Fractura de muñeca</td>
+                            <td>Caída accidental, dolor severo</td>
+                            <td>Inmovilización, analgésicos</td>
+                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"><strong>002</strong></td>
+                            <td class="text-center"><strong>2006</strong></td>
+                            <td class="text-center">306</td>
+                            <td class="text-center">1006</td>
+                            <td class="text-center">2</td>
+                            <td class="text-center">23/01/2025</td>
+                            <td>Migraña crónica</td>
+                            <td>Cefalea intensa, fotofobia</td>
+                            <td>Sumatriptán, evitar stress</td>
+                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small>
+                    <i class="bi bi-mouse"></i> Desplázate para ver más atenciones • 
+                    <strong>6 de 1,892</strong> atenciones médicas mostradas
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

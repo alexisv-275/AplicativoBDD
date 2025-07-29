@@ -298,3 +298,86 @@ input[type="text"][placeholder*="Buscar"] {
     background-position: 10px center;
     padding-left: 35px;
 }
+
+/* ===== ESTILOS PARA SIDEBAR ===== */
+
+/* Layout principal */
+#wrapper {
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.sidebar .list-group-item {
+    border: none;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.sidebar .list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: translateX(5px);
+}
+
+.sidebar .list-group-item.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-left: 4px solid #fff;
+}
+
+.sidebar .list-group-item i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+/* Panel principal */
+#page-content-wrapper {
+    width: 100%;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#sidebar-toggle {
+    border: none;
+    background: transparent;
+}
+
+#sidebar-toggle:hover {
+    background-color: #f8f9fa;
+}
+
+/* Responsive para sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-left: -250px;
+        position: fixed;
+        z-index: 1050;
+    }
+    
+    .sidebar.active {
+        margin-left: 0;
+    }
+    
+    #page-content-wrapper {
+        width: 100%;
+    }
+}
