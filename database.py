@@ -89,3 +89,88 @@ class DatabaseConnection:
         results['guayaquil'] = guayaquil_result
         
         return results
+    
+    def detect_current_node(self):
+        """Detecta a qué nodo está conectado actualmente el aplicativo"""
+        # Primero intenta Quito
+        try:
+            connection = self.get_connection('quito')
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT @@SERVERNAME")
+                server_name = cursor.fetchone()[0]
+                connection.close()
+                
+                # Si es ASUSVIVOBOOK, es Quito
+                if 'ASUSVIVOBOOK' in server_name.upper():
+                    return 'quito'
+        except:
+            pass
+        
+        # Luego intenta Guayaquil
+        try:
+            connection = self.get_connection('guayaquil')
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT @@SERVERNAME")
+                server_name = cursor.fetchone()[0]
+                connection.close()
+                
+                # Si es DESKTOP-5U7KKBV, es Guayaquil
+                if 'DESKTOP-5U7KKBV' in server_name.upper():
+                    return 'guayaquil'
+        except:
+            pass
+        
+        # Por defecto, Quito (nodo principal)
+        return 'quito'
+    
+    def get_vista_pacientes(self):
+        """Obtiene todos los pacientes desde Vista_Paciente del nodo actual"""
+        current_node = self.detect_current_node()
+        
+        query = """
+        SELECT ID_Hospital, ID_Paciente, Nombre, Apellido, 
+               Dirección, FechaNacimiento, Sexo, Teléfono
+        FROM Vista_Paciente
+        ORDER BY ID_Hospital, ID_Paciente
+        """
+        
+        return self.execute_query(query, node=current_node)
+    
+    def insert_paciente(self, id_hospital, nombre, apellido, direccion, fecha_nac, sexo, telefono):
+        """Inserta un nuevo paciente en Vista_Paciente"""
+        current_node = self.detect_current_node()
+        
+        query = """
+        INSERT INTO Vista_Paciente (ID_Hospital, Nombre, Apellido, Dirección, FechaNacimiento, Sexo, Teléfono)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        params = (id_hospital, nombre, apellido, direccion, fecha_nac, sexo, telefono)
+        return self.execute_query(query, params, current_node)
+    
+    def update_paciente(self, id_hospital, id_paciente, nombre, apellido, direccion, fecha_nac, sexo, telefono):
+        """Actualiza un paciente en Vista_Paciente"""
+        current_node = self.detect_current_node()
+        
+        query = """
+        UPDATE Vista_Paciente 
+        SET Nombre = ?, Apellido = ?, Dirección = ?, FechaNacimiento = ?, Sexo = ?, Teléfono = ?
+        WHERE ID_Hospital = ? AND ID_Paciente = ?
+        """
+        
+        params = (nombre, apellido, direccion, fecha_nac, sexo, telefono, id_hospital, id_paciente)
+        return self.execute_query(query, params, current_node)
+    
+    def delete_paciente(self, id_hospital, id_paciente):
+        """Elimina un paciente de Vista_Paciente"""
+        current_node = self.detect_current_node()
+        
+        query = """
+        DELETE FROM Vista_Paciente 
+        WHERE ID_Hospital = ? AND ID_Paciente = ?
+        """
+        
+        params = (id_hospital, id_paciente)
+        return self.execute_query(query, params, current_node)

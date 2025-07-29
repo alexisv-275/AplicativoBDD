@@ -9,10 +9,18 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-people"></i> Gestión de Pacientes</h2>
-            <p class="text-muted">Administre la información de pacientes distribuida entre Quito y Guayaquil</p>
+            <p class="text-muted">
+                Vista unificada desde <strong>Vista_Paciente</strong> • 
+                Nodo actual: <span class="badge bg-{{ 'success' if current_node == 'quito' else 'info' }}">
+                    {{ 'Quito (ASUSVIVOBOOK)' if current_node == 'quito' else 'Guayaquil (DESKTOP-5U7KKBV)' }}
+                </span>
+            </p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" onclick="loadPacientes()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
+            </button>
+            <button class="btn btn-success ms-2">
                 <i class="bi bi-plus-circle"></i> Nuevo Paciente
             </button>
         </div>
@@ -67,119 +75,14 @@
                             <th class="text-center" style="width: 100px;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tbody-pacientes">
+                        <!-- Los datos se cargarán dinámicamente via JavaScript -->
                         <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>1001</strong></td>
-                            <td>Juan Carlos</td>
-                            <td>Pérez García</td>
-                            <td>Av. Amazonas 123, Quito</td>
-                            <td class="text-center">15/03/1985</td>
-                            <td class="text-center">M</td>
-                            <td>0998765432</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>1002</strong></td>
-                            <td>María Elena</td>
-                            <td>González López</td>
-                            <td>Cdla. Kennedy, Guayaquil</td>
-                            <td class="text-center">22/07/1990</td>
-                            <td class="text-center">F</td>
-                            <td>0987654321</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>1003</strong></td>
-                            <td>Carlos Alberto</td>
-                            <td>Martínez Silva</td>
-                            <td>La Carolina, Quito</td>
-                            <td class="text-center">10/12/1978</td>
-                            <td class="text-center">M</td>
-                            <td>0999876543</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>1004</strong></td>
-                            <td>Ana Lucía</td>
-                            <td>Rodríguez Vega</td>
-                            <td>Urdesa Central, Guayaquil</td>
-                            <td class="text-center">05/09/1995</td>
-                            <td class="text-center">F</td>
-                            <td>0986543210</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>1005</strong></td>
-                            <td>Roberto</td>
-                            <td>Jiménez Castro</td>
-                            <td>El Batán, Quito</td>
-                            <td class="text-center">18/11/1982</td>
-                            <td class="text-center">M</td>
-                            <td>0997654321</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>1006</strong></td>
-                            <td>Patricia</td>
-                            <td>Morales Herrera</td>
-                            <td>Los Ceibos, Guayaquil</td>
-                            <td class="text-center">25/04/1988</td>
-                            <td class="text-center">F</td>
-                            <td>0985432109</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                            <td colspan="10" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Consultando Vista_Paciente...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -189,10 +92,15 @@
             <div class="card-footer bg-light text-muted text-center py-2">
                 <small>
                     <i class="bi bi-mouse"></i> Desplázate para ver más registros • 
-                    <strong>6 de 1,245</strong> pacientes mostrados
+                    <strong id="info-registros">{{ pacientes|length if pacientes else 0 }} pacientes</strong> • 
+                    <span class="text-success">Vista_Paciente activa</span>
                 </small>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Incluir JavaScript específico para pacientes -->
+<script src="{{ url_for('static', filename='js/pacientes.js') }}"></script>
+
 {% endblock %}
