@@ -5,15 +5,23 @@
 
 {% block content %}
 <div class="content-section">
-    <!-- Header con botón agregar -->
+    <!-- Header con botón agregar y actualizar -->
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-person-workspace"></i> Experiencia del Personal</h2>
-            <p class="text-muted">Gestione la experiencia laboral del personal médico en ambos hospitales</p>
+            <p class="text-muted">
+                Vista unificada desde <strong>Vista_Experiencia</strong> • 
+                Nodo actual: <span class="badge bg-{{ 'success' if current_node == 'quito' else 'info' }}">
+                    {{ 'Quito (ASUSVIVOBOOK)' if current_node == 'quito' else 'Guayaquil (DESKTOP-5U7KKBV)' }}
+                </span>
+            </p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Registrar Experiencia
+            <button class="btn btn-primary" onclick="loadExperiencias()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
+            </button>
+            <button class="btn btn-success ms-2">
+                <i class="bi bi-plus-circle"></i> Nueva Experiencia
             </button>
         </div>
     </div>
@@ -49,8 +57,8 @@
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">
-                <i class="bi bi-briefcase"></i> Registro de Experiencia Laboral
-                <span class="badge bg-secondary ms-2">245 registros</span>
+                <i class="bi bi-briefcase"></i> Registro de Experiencia Laboral (Vista_Experiencia)
+                <span class="badge bg-secondary ms-2">{{ experiencias|length if experiencias else 0 }} registros</span>
             </h5>
         </div>
         <div class="card-body p-0">
@@ -66,127 +74,49 @@
                             <th class="text-center" style="width: 150px;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>301</strong></td>
-                            <td>Médico General</td>
-                            <td class="text-center">8</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>302</strong></td>
-                            <td>Cardiólogo</td>
-                            <td class="text-center">12</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>303</strong></td>
-                            <td>Pediatra</td>
-                            <td class="text-center">6</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>304</strong></td>
-                            <td>Enfermero/a Jefe</td>
-                            <td class="text-center">15</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>305</strong></td>
-                            <td>Ginecólogo</td>
-                            <td class="text-center">10</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>306</strong></td>
-                            <td>Administrador</td>
-                            <td class="text-center">5</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>001</strong></td>
-                            <td class="text-center"><strong>307</strong></td>
-                            <td>Enfermero/a</td>
-                            <td class="text-center">3</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>308</strong></td>
-                            <td>Neurólogo</td>
-                            <td class="text-center">18</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                    <tbody id="tbody-experiencias">
+                        {% if experiencias and experiencias|length > 0 %}
+                            {% for experiencia in experiencias %}
+                            <tr data-id-hospital="{{ experiencia.ID_Hospital }}" data-id-personal="{{ experiencia.ID_Personal }}">
+                                <td class="text-center"><strong>{{ experiencia.ID_Hospital }}</strong></td>
+                                <td class="text-center"><strong>{{ experiencia.ID_Personal }}</strong></td>
+                                <td>{{ experiencia.Cargo or 'Sin cargo' }}</td>
+                                <td class="text-center">
+                                    {% if experiencia.Años_exp is not none %}
+                                        {{ experiencia.Años_exp }} años
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if experiencia.ID_Hospital == 1 %}
+                                        <span class="badge bg-success">Quito</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Guayaquil</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-warning me-1" 
+                                            onclick="experienciaManager.editExperiencia({{ experiencia.ID_Hospital }}, {{ experiencia.ID_Personal }})" 
+                                            title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="experienciaManager.deleteExperiencia({{ experiencia.ID_Hospital }}, {{ experiencia.ID_Personal }})" 
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-database-x"></i> 
+                                    No hay experiencias disponibles en Vista_Experiencia
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -194,10 +124,15 @@
             <div class="card-footer bg-light text-muted text-center py-2">
                 <small>
                     <i class="bi bi-mouse"></i> Desplázate para ver más registros • 
-                    <strong>8 de 245</strong> registros de experiencia mostrados
+                    <strong id="info-registros">{{ experiencias|length if experiencias else 0 }} experiencias</strong> desde 
+                    <span class="badge bg-success">{{ current_node|default('quito')|title }}</span>
                 </small>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/experiencia.js') }}"></script>
 {% endblock %}
