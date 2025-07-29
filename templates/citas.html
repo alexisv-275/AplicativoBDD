@@ -9,10 +9,18 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-heart-pulse"></i> Atenciones Médicas</h2>
-            <p class="text-muted">Consulte y gestione el historial de atenciones médicas de los pacientes</p>
+            <p class="text-muted">
+                Vista unificada desde <strong>Vista_Atencion_Medica</strong> • 
+                Nodo actual: <span class="badge bg-{{ 'success' if current_node == 'quito' else 'info' }}">
+                    {{ 'Quito (ASUSVIVOBOOK)' if current_node == 'quito' else 'Guayaquil (DESKTOP-5U7KKBV)' }}
+                </span>
+            </p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" onclick="loadAtenciones()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
+            </button>
+            <button class="btn btn-success ms-2">
                 <i class="bi bi-plus-circle"></i> Nueva Atención
             </button>
         </div>
@@ -23,7 +31,7 @@
         <div class="col-md-6">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" placeholder="Buscar por ID paciente, diagnóstico o tratamiento...">
+                <input type="text" class="form-control" placeholder="Buscar por ID paciente, personal o atención...">
             </div>
         </div>
         <div class="col-md-3">
@@ -36,10 +44,9 @@
         <div class="col-md-3">
             <select class="form-select">
                 <option>Todos los tipos</option>
-                <option>Consulta General</option>
-                <option>Emergencia</option>
-                <option>Control</option>
-                <option>Cirugía</option>
+                <option value="1">Tipo 1</option>
+                <option value="2">Tipo 2</option>
+                <option value="3">Tipo 3</option>
             </select>
         </div>
     </div>
@@ -49,7 +56,7 @@
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="bi bi-clipboard2-pulse"></i> Registro de Atenciones Médicas
-                <span class="badge bg-secondary ms-2">1,892 atenciones</span>
+                <span class="badge bg-secondary ms-2" id="total-atenciones">Cargando...</span>
             </h5>
         </div>
         <div class="card-body p-0">
@@ -59,18 +66,40 @@
                         <tr>
                             <th class="text-center" style="width: 80px;">ID Hosp</th>
                             <th class="text-center" style="width: 90px;">ID Atención</th>
-                            <th class="text-center" style="width: 90px;">ID Personal</th>
                             <th class="text-center" style="width: 90px;">ID Paciente</th>
+                            <th class="text-center" style="width: 90px;">ID Personal</th>
                             <th class="text-center" style="width: 80px;">ID Tipo</th>
                             <th class="text-center" style="width: 100px;">Fecha</th>
-                            <th style="width: 200px;">Diagnóstico</th>
+                            <th style="width: 180px;">Diagnóstico</th>
                             <th style="width: 180px;">Descripción</th>
                             <th style="width: 180px;">Tratamiento</th>
                             <th class="text-center" style="width: 80px;">Nodo</th>
                             <th class="text-center" style="width: 100px;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tbody-atenciones">
+                        <!-- Los datos se cargarán dinámicamente via JavaScript -->
+                        <tr>
+                            <td colspan="11" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Consultando Vista_Atencion_Medica...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small>
+                    <i class="bi bi-mouse"></i> Desplázate para ver más registros • 
+                    <strong id="info-registros">{{ atenciones|length if atenciones else 0 }} atenciones médicas</strong> • 
+                    <span class="text-success">Vista_Atencion_Medica activa</span>
+                </small>
+            </div>
+        </div>
+    </div>
                         <tr>
                             <td class="text-center"><strong>001</strong></td>
                             <td class="text-center"><strong>2001</strong></td>
@@ -159,49 +188,10 @@
                             <td class="text-center">4</td>
                             <td class="text-center">23/01/2025</td>
                             <td>Fractura de muñeca</td>
-                            <td>Caída accidental, dolor severo</td>
-                            <td>Inmovilización, analgésicos</td>
-                            <td class="text-center"><span class="badge bg-success">Quito</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>002</strong></td>
-                            <td class="text-center"><strong>2006</strong></td>
-                            <td class="text-center">306</td>
-                            <td class="text-center">1006</td>
-                            <td class="text-center">2</td>
-                            <td class="text-center">23/01/2025</td>
-                            <td>Migraña crónica</td>
-                            <td>Cefalea intensa, fotofobia</td>
-                            <td>Sumatriptán, evitar stress</td>
-                            <td class="text-center"><span class="badge bg-info">Guayaquil</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- Indicador de scrollbar y total de registros -->
-            <div class="card-footer bg-light text-muted text-center py-2">
-                <small>
-                    <i class="bi bi-mouse"></i> Desplázate para ver más atenciones • 
-                    <strong>6 de 1,892</strong> atenciones médicas mostradas
-                </small>
-            </div>
-        </div>
     </div>
 </div>
+
+<!-- Incluir JavaScript específico para atención médica -->
+<script src="{{ url_for('static', filename='js/atencion_medica.js') }}"></script>
+
 {% endblock %}

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from models.pacientes import PacientesModel
+from models.atencion_medica import AtencionMedicaModel
 import os
 from dotenv import load_dotenv
 
@@ -9,8 +10,9 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'tu_clave_secreta_aqui')
 
-# Instancia del modelo de pacientes
+# Instancias de los modelos
 pacientes_model = PacientesModel()
+atencion_medica_model = AtencionMedicaModel()
 
 @app.route('/')
 def index():
@@ -158,8 +160,99 @@ def api_search_pacientes():
 
 @app.route('/citas')
 def citas():
-    """Módulo de atención médica y citas"""
-    return render_template('citas.html')
+    """Módulo de atención médica y citas - Carga desde Vista_Atencion_Medica"""
+    try:
+        result = atencion_medica_model.get_all_atenciones()
+        
+        return render_template('citas.html', 
+                             atenciones=result['atenciones'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar atenciones médicas: {str(e)}', 'error')
+        return render_template('citas.html', 
+                             atenciones=[], 
+                             current_node='quito')
+
+@app.route('/api/atenciones')
+def api_atenciones():
+    """API para obtener atenciones médicas en formato JSON"""
+    try:
+        result = atencion_medica_model.get_all_atenciones()
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'atenciones': result['atenciones'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/atenciones/add', methods=['POST'])
+def api_add_atencion():
+    """API para agregar nueva atención médica"""
+    try:
+        data = request.get_json()
+        
+        result = atencion_medica_model.create_atencion(data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['PUT'])
+def api_update_atencion(id_hospital, id_atencion):
+    """API para actualizar una atención médica"""
+    try:
+        data = request.get_json()
+        
+        result = atencion_medica_model.update_atencion(id_hospital, id_atencion, data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['DELETE'])
+def api_delete_atencion(id_hospital, id_atencion):
+    """API para eliminar una atención médica"""
+    try:
+        result = atencion_medica_model.delete_atencion(id_hospital, id_atencion)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/search')
+def api_search_atenciones():
+    """API para buscar atenciones médicas"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
+        
+        result = atencion_medica_model.search_atenciones(query)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
 
 @app.route('/personal')
 def personal():

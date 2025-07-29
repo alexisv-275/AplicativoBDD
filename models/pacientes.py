@@ -21,7 +21,12 @@ class PacientesModel(DatabaseConnection):
             
             query = "SELECT * FROM Vista_Paciente ORDER BY ID_Hospital, ID_Paciente"
             results = self.execute_query(query, node=current_node)
-            
+
+            #DEBUGEAR
+            if results and len(results) > 0:
+                print(f"Campos disponibles en Vista Paciente: {list(results[0].keys())}")
+                print(f"Primer registro: {results[0]}")
+
             if results is None:
                 return {
                     'success': False,
