@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from database import DatabaseConnection
+from models.pacientes import PacientesModel
+from models.atencion_medica import AtencionMedicaModel
+from models.experiencia import ExperienciaModel
 import os
 from dotenv import load_dotenv
 
@@ -7,153 +9,364 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('SECRET_KEY', 'tu_clave_secreta_aqui')
 
-# Instancia de la conexión a la base de datos
-db = DatabaseConnection()
+# Instancias de los modelos
+pacientes_model = PacientesModel()
+atencion_medica_model = AtencionMedicaModel()
+experiencia_model = ExperienciaModel()
 
 @app.route('/')
 def index():
     """Página principal del sistema hospitalario"""
     return render_template('index.html')
 
+@app.route('/hospital')
+def hospital():
+    """Pantalla de presentación del hospital"""
+    return render_template('hospital.html')
+
 @app.route('/pacientes')
-def listar_pacientes():
-    """Lista todos los pacientes de ambos nodos"""
+def pacientes():
+    """Módulo de gestión de pacientes - Carga desde Vista_Paciente"""
     try:
-        # Consulta a la vista distribuida de pacientes
-        query = "SELECT * FROM VistaPacientes"
-        pacientes = db.execute_query(query, node='quito')  # Usar la vista desde cualquier nodo
+        result = pacientes_model.get_all_pacientes()
         
-        return render_template('pacientes/lista.html', pacientes=pacientes)
+        return render_template('pacientes.html', 
+                             pacientes=result['pacientes'] if result['success'] else [],
+                             current_node=result['node'])
     except Exception as e:
         flash(f'Error al cargar pacientes: {str(e)}', 'error')
-        return render_template('pacientes/lista.html', pacientes=[])
+        return render_template('pacientes.html', 
+                             pacientes=[], 
+                             current_node='quito')
 
-@app.route('/pacientes/nuevo', methods=['GET', 'POST'])
-def nuevo_paciente():
-    """Crear un nuevo paciente"""
-    if request.method == 'POST':
-        try:
-            # Obtener datos del formulario
-            cedula = request.form['cedula']
-            nombres = request.form['nombres']
-            apellidos = request.form['apellidos']
-            fecha_nacimiento = request.form['fecha_nacimiento']
-            telefono = request.form['telefono']
-            email = request.form['email']
-            direccion = request.form['direccion']
-            ciudad = request.form['ciudad']
-            
-            # Insertar en la vista (se dirigirá automáticamente al nodo correcto por la fragmentación)
-            query = """
-                INSERT INTO VistaPacientes 
-                (cedula, nombres, apellidos, fecha_nacimiento, telefono, email, direccion, ciudad)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """
-            params = (cedula, nombres, apellidos, fecha_nacimiento, telefono, email, direccion, ciudad)
-            
-            result = db.execute_query(query, params, 'quito')  # La vista manejará la fragmentación
-            
-            if result is not None:
-                flash('Paciente creado exitosamente', 'success')
-                return redirect(url_for('listar_pacientes'))
-            else:
-                flash('Error al crear el paciente', 'error')
-                
-        except Exception as e:
-            flash(f'Error: {str(e)}', 'error')
-    
-    return render_template('pacientes/nuevo.html')
-
-@app.route('/pacientes/editar/<cedula>', methods=['GET', 'POST'])
-def editar_paciente(cedula):
-    """Editar un paciente existente"""
-    if request.method == 'POST':
-        try:
-            # Obtener datos del formulario
-            nombres = request.form['nombres']
-            apellidos = request.form['apellidos']
-            fecha_nacimiento = request.form['fecha_nacimiento']
-            telefono = request.form['telefono']
-            email = request.form['email']
-            direccion = request.form['direccion']
-            ciudad = request.form['ciudad']
-            
-            # Actualizar en la vista
-            query = """
-                UPDATE VistaPacientes 
-                SET nombres=?, apellidos=?, fecha_nacimiento=?, telefono=?, email=?, direccion=?, ciudad=?
-                WHERE cedula=?
-            """
-            params = (nombres, apellidos, fecha_nacimiento, telefono, email, direccion, ciudad, cedula)
-            
-            result = db.execute_query(query, params, 'quito')
-            
-            if result is not None and result > 0:
-                flash('Paciente actualizado exitosamente', 'success')
-                return redirect(url_for('listar_pacientes'))
-            else:
-                flash('Error al actualizar el paciente', 'error')
-                
-        except Exception as e:
-            flash(f'Error: {str(e)}', 'error')
-    
-    # Obtener datos del paciente para el formulario
+@app.route('/api/pacientes')
+def api_pacientes():
+    """API para obtener pacientes en formato JSON"""
     try:
-        query = "SELECT * FROM VistaPacientes WHERE cedula = ?"
-        paciente = db.execute_query(query, (cedula,), 'quito')
-        if paciente:
-            paciente = paciente[0]  # Primer resultado
-            return render_template('pacientes/editar.html', paciente=paciente)
+        result = pacientes_model.get_all_pacientes()
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'pacientes': result['pacientes'],
+                'total': result['total']
+            })
         else:
-            flash('Paciente no encontrado', 'error')
-            return redirect(url_for('listar_pacientes'))
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
     except Exception as e:
-        flash(f'Error al cargar paciente: {str(e)}', 'error')
-        return redirect(url_for('listar_pacientes'))
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
 
-@app.route('/pacientes/eliminar/<cedula>', methods=['POST'])
-def eliminar_paciente(cedula):
-    """Eliminar un paciente"""
+@app.route('/api/pacientes/add', methods=['POST'])
+def api_add_paciente():
+    """API para agregar nuevo paciente"""
     try:
-        query = "DELETE FROM VistaPacientes WHERE cedula = ?"
-        result = db.execute_query(query, (cedula,), 'quito')
+        data = request.get_json()
         
-        if result is not None and result > 0:
-            flash('Paciente eliminado exitosamente', 'success')
+        result = pacientes_model.create_paciente(
+            data['id_hospital'],
+            data['nombre'],
+            data['apellido'],
+            data['direccion'],
+            data['fecha_nacimiento'],
+            data['sexo'],
+            data['telefono']
+        )
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Paciente agregado exitosamente'})
         else:
-            flash('Error al eliminar el paciente', 'error')
+            return jsonify({'success': False, 'error': 'No se pudo agregar el paciente'})
             
     except Exception as e:
-        flash(f'Error: {str(e)}', 'error')
-    
-    return redirect(url_for('listar_pacientes'))
+        return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/estadisticas')
-def estadisticas():
-    """Mostrar estadísticas del sistema distribuido"""
+@app.route('/api/pacientes/<int:id_hospital>/<int:id_paciente>', methods=['PUT'])
+def api_update_paciente(id_hospital, id_paciente):
+    """API para actualizar un paciente"""
     try:
-        # Consultas para estadísticas
-        query_total_pacientes = "SELECT COUNT(*) as total FROM VistaPacientes"
-        query_pacientes_quito = "SELECT COUNT(*) as total FROM PacientesQuito"
-        query_pacientes_guayaquil = "SELECT COUNT(*) as total FROM PacientesGuayaquil"
+        data = request.get_json()
         
-        total_pacientes = db.execute_query(query_total_pacientes, node='quito')[0][0]
-        pacientes_quito = db.execute_query(query_pacientes_quito, node='quito')[0][0]
-        pacientes_guayaquil = db.execute_query(query_pacientes_guayaquil, node='guayaquil')[0][0]
+        result = pacientes_model.update_paciente(
+            id_hospital,
+            id_paciente,
+            data['nombre'],
+            data['apellido'],
+            data['direccion'],
+            data['fecha_nacimiento'],
+            data['sexo'],
+            data['telefono']
+        )
         
-        stats = {
-            'total_pacientes': total_pacientes,
-            'pacientes_quito': pacientes_quito,
-            'pacientes_guayaquil': pacientes_guayaquil
-        }
-        
-        return render_template('estadisticas.html', stats=stats)
-        
+        if result:
+            return jsonify({'success': True, 'message': 'Paciente actualizado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'No se pudo actualizar el paciente'})
+            
     except Exception as e:
-        flash(f'Error al cargar estadísticas: {str(e)}', 'error')
-        return render_template('estadisticas.html', stats={})
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/pacientes/<int:id_hospital>/<int:id_paciente>', methods=['DELETE'])
+def api_delete_paciente(id_hospital, id_paciente):
+    """API para eliminar un paciente"""
+    try:
+        result = pacientes_model.delete_paciente(id_hospital, id_paciente)
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Paciente eliminado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'No se pudo eliminar el paciente'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/pacientes/search')
+def api_search_pacientes():
+    """API para buscar pacientes"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
+        
+        result = pacientes_model.search_pacientes(query)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'pacientes': result['pacientes'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/citas')
+def citas():
+    """Módulo de atención médica y citas - Carga desde Vista_Atencion_Medica"""
+    try:
+        result = atencion_medica_model.get_all_atenciones()
+        
+        return render_template('citas.html', 
+                             atenciones=result['atenciones'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar atenciones médicas: {str(e)}', 'error')
+        return render_template('citas.html', 
+                             atenciones=[], 
+                             current_node='quito')
+
+@app.route('/api/atenciones')
+def api_atenciones():
+    """API para obtener atenciones médicas en formato JSON"""
+    try:
+        result = atencion_medica_model.get_all_atenciones()
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'atenciones': result['atenciones'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/atenciones/add', methods=['POST'])
+def api_add_atencion():
+    """API para agregar nueva atención médica"""
+    try:
+        data = request.get_json()
+        
+        result = atencion_medica_model.create_atencion(data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['PUT'])
+def api_update_atencion(id_hospital, id_atencion):
+    """API para actualizar una atención médica"""
+    try:
+        data = request.get_json()
+        
+        result = atencion_medica_model.update_atencion(id_hospital, id_atencion, data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['DELETE'])
+def api_delete_atencion(id_hospital, id_atencion):
+    """API para eliminar una atención médica"""
+    try:
+        result = atencion_medica_model.delete_atencion(id_hospital, id_atencion)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/atenciones/search')
+def api_search_atenciones():
+    """API para buscar atenciones médicas"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
+        
+        result = atencion_medica_model.search_atenciones(query)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/personal')
+def personal():
+    """Módulo de personal médico"""
+    return render_template('personal.html')
+
+@app.route('/experiencia')
+def experiencia():
+    """Módulo de experiencia médica - Carga desde Vista_Experiencia"""
+    try:
+        result = experiencia_model.get_all_experiencias()
+        
+        return render_template('experiencia.html', 
+                             experiencias=result['experiencias'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar experiencias: {str(e)}', 'error')
+        return render_template('experiencia.html', 
+                             experiencias=[], 
+                             current_node='quito')
+
+@app.route('/api/experiencias')
+def api_experiencias():
+    """API para obtener experiencias en formato JSON"""
+    try:
+        result = experiencia_model.get_all_experiencias()
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'experiencias': result['experiencias'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/experiencias/add', methods=['POST'])
+def api_add_experiencia():
+    """API para agregar nueva experiencia"""
+    try:
+        data = request.get_json()
+        
+        result = experiencia_model.create_experiencia(data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/experiencias/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
+def api_update_experiencia(id_hospital, id_personal):
+    """API para actualizar una experiencia"""
+    try:
+        data = request.get_json()
+        
+        result = experiencia_model.update_experiencia(id_hospital, id_personal, data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/experiencias/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
+def api_delete_experiencia(id_hospital, id_personal):
+    """API para eliminar una experiencia"""
+    try:
+        result = experiencia_model.delete_experiencia(id_hospital, id_personal)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/experiencias/search')
+def api_search_experiencias():
+    """API para buscar experiencias"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
+        
+        result = experiencia_model.search_experiencias(query)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/especialidad')
+def especialidad():
+    """Módulo de especialidades médicas"""
+    return render_template('especialidad.html')
+
+@app.route('/tipo-atencion')
+def tipo_atencion():
+    """Módulo de tipos de atención"""
+    return render_template('tipo_atencion.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
