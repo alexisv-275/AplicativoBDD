@@ -313,3 +313,85 @@ class PersonalMedicoModel(DatabaseConnection):
                 'error': str(e),
                 'personal_medico': []
             }
+
+    def create_personal_medico_with_contrato(self, personal_data, salario, fecha_contrato=None, node=None):
+        """Crear personal médico + contrato: Personal en nodo local, Contrato siempre en Quito"""
+        try:
+            current_node = node or self.detect_current_node()
+            if not current_node:
+                return {
+                    'success': False,
+                    'error': 'No se puede conectar a ningún nodo'
+                }
+            
+            # Auto-asignar ID_Personal según el rango del nodo
+            next_id = self.get_next_available_id(current_node)
+            if next_id is None:
+                range_config = self.ID_RANGES.get(current_node, {})
+                return {
+                    'success': False,
+                    'error': f'No hay IDs disponibles en el rango {range_config.get("min", "?")} - {range_config.get("max", "?")} para el nodo {current_node}'
+                }
+            
+            # Auto-asignar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            # ======================================
+            # PASO 1: Crear Personal Médico en nodo local
+            # ======================================
+            connection = self.get_connection()
+            if not connection:
+                return {
+                    'success': False,
+                    'error': 'No se pudo establecer conexión para insertar personal médico'
+                }
+                
+            cursor = connection.cursor()
+            
+            print(f"Debug: Ejecutando SP_Create_PersonalMedico en nodo {current_node}: Hospital={hospital_id}, Personal={next_id}")
+            
+            # Ejecutar SP SOLO para Personal Médico (sin salario/contrato)
+            cursor.execute("{CALL SP_Create_PersonalMedico (?, ?, ?, ?, ?, ?)}", 
+                         (hospital_id, next_id, personal_data['ID_Especialidad'],
+                          personal_data['Nombre'], personal_data['Apellido'], 
+                          personal_data['Teléfono']))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            print("Debug: Personal médico creado exitosamente")
+            
+            # ======================================
+            # PASO 2: Crear Contrato usando conexión normal
+            # ======================================
+            from .contratos import ContratosManager
+            
+            # Usar conexión normal - SQL Server maneja el linked server
+            contratos_manager = ContratosManager()
+            
+            contrato_creado = contratos_manager.create_contrato(
+                hospital_id, next_id, salario, fecha_contrato
+            )
+            
+            if not contrato_creado:
+                return {
+                    'success': False,
+                    'error': 'Personal médico creado, pero falló la creación del contrato'
+                }
+            
+            print("Debug: Contrato creado exitosamente en Quito")
+            
+            return {
+                'success': True,
+                'message': f'Personal médico y contrato creados exitosamente (Personal en {current_node}, Contrato en Quito)',
+                'id_personal': next_id,
+                'id_hospital': hospital_id
+            }
+            
+        except Exception as e:
+            print(f"Error detallado al crear personal médico + contrato: {e}")
+            return {
+                'success': False,
+                'error': f'Error al crear personal médico + contrato: {str(e)}'
+            }

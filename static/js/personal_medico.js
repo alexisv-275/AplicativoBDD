@@ -27,10 +27,19 @@ function initializeEventListeners() {
         });
     }
 
-    // Botón nuevo personal médico
-    const btnNuevo = document.querySelector('.btn-success');
+    // Botón nuevo personal médico - usar el botón del modal
+    const btnNuevo = document.querySelector('button[data-bs-target="#modalNuevoPersonal"]');
     if (btnNuevo) {
         btnNuevo.addEventListener('click', showAddModal);
+    }
+    
+    // Configurar el formulario del modal
+    const form = document.getElementById('formNuevoPersonal');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            savePersonalMedicoWithContrato();
+        });
     }
 }
 
@@ -140,65 +149,88 @@ function searchPersonalMedico(searchTerm) {
 }
 
 function showAddModal() {
-    const modalHtml = `
-        <div class="modal fade" id="personalMedicoModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-plus-circle"></i> Nuevo Personal Médico
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle"></i> 
-                            Los IDs se asignan automáticamente según el nodo actual
-                        </div>
-                        <form id="personalMedicoForm">
-                            <div class="mb-3">
-                                <label for="id_especialidad" class="form-label">ID Especialidad *</label>
-                                <input type="number" class="form-control" id="id_especialidad" required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nombre" class="form-label">Nombre *</label>
-                                    <input type="text" class="form-control" id="nombre" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="apellido" class="form-label">Apellido *</label>
-                                    <input type="text" class="form-control" id="apellido" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="telefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" id="telefono">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="savePersonalMedico()">
-                            <i class="bi bi-check-circle"></i> Guardar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remover modal existente si hay uno
-    const existingModal = document.getElementById('personalMedicoModal');
-    if (existingModal) {
-        existingModal.remove();
+    // Limpiar formulario
+    const form = document.getElementById('formNuevoPersonal');
+    if (form) {
+        form.reset();
     }
     
-    // Agregar modal al DOM
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    // Establecer fecha actual como default
+    const fechaInput = document.getElementById('fechaContrato');
+    if (fechaInput) {
+        const today = new Date().toISOString().split('T')[0];
+        fechaInput.value = today;
+    }
+}
+
+function savePersonalMedicoWithContrato() {
+    console.log('📝 Iniciando savePersonalMedicoWithContrato...');
     
-    // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById('personalMedicoModal'));
-    modal.show();
+    const form = document.getElementById('formNuevoPersonal');
+    if (!form) {
+        console.error('❌ No se encontró el formulario');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    // Preparar datos del personal médico
+    const personalData = {
+        ID_Especialidad: parseInt(formData.get('especialidad')),
+        Nombre: formData.get('nombre'),
+        Apellido: formData.get('apellido'),
+        Teléfono: formData.get('telefono')
+    };
+    
+    // Preparar datos del contrato
+    const salario = parseFloat(formData.get('salario'));
+    const fechaContrato = formData.get('fechaContrato') || null;
+    
+    console.log('📋 Datos a enviar:', {
+        personal_data: personalData,
+        salario: salario,
+        fecha_contrato: fechaContrato
+    });
+    
+    // Enviar datos al servidor
+    fetch('/api/personal-medico-with-contrato', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            personal_data: personalData,
+            salario: salario,
+            fecha_contrato: fechaContrato
+        })
+    })
+    .then(response => {
+        console.log('📡 Respuesta del servidor:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📊 Datos recibidos:', data);
+        
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoPersonal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Recargar datos
+            loadPersonalMedico();
+            
+            // Mostrar mensaje de éxito
+            showToast('Personal médico y contrato creados exitosamente', 'success');
+        } else {
+            showToast('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error en fetch:', error);
+        showToast('Error al crear personal médico y contrato', 'error');
+    });
 }
 
 function editPersonalMedico(idHospital, idPersonal) {
@@ -477,4 +509,13 @@ function showError(message) {
     toast.addEventListener('hidden.bs.toast', () => {
         toast.remove();
     });
+}
+
+// Función unificada para mostrar toasts
+function showToast(message, type = 'success') {
+    if (type === 'success') {
+        showSuccess(message);
+    } else if (type === 'error') {
+        showError(message);
+    }
 }

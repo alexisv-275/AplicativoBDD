@@ -232,24 +232,79 @@ function saveContrato() {
 
 // Eliminar contrato
 function deleteContrato(idHospital, idPersonal) {
-    if (confirm(`¿Está seguro de que desea eliminar el contrato del personal ${idPersonal} en hospital ${idHospital}?`)) {
-        fetch(`/api/contratos/${idHospital}/${idPersonal}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                loadContratos(); // Recargar la tabla
-            } else {
-                showToast('Error: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            showToast('Error de conexión al eliminar contrato', 'error');
-            console.error('Error:', error);
-        });
+    // Crear modal de confirmación personalizado
+    const modalHtml = `
+        <div class="modal fade" id="deleteContratoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>¿Está seguro de que desea eliminar este contrato?</strong></p>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Hospital:</strong> ${idHospital} <br>
+                            <strong>Personal:</strong> ${idPersonal} <br>
+                            <small>Esta acción no se puede deshacer.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="confirmDeleteContrato(${idHospital}, ${idPersonal})">
+                            <i class="bi bi-trash3"></i> Eliminar Contrato
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal existente si hay uno
+    const existingModal = document.getElementById('deleteContratoModal');
+    if (existingModal) {
+        existingModal.remove();
     }
+    
+    // Agregar el modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteContratoModal'));
+    modal.show();
+}
+
+// Función para confirmar la eliminación
+function confirmDeleteContrato(idHospital, idPersonal) {
+    fetch(`/api/contratos/${idHospital}/${idPersonal}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Cerrar el modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteContratoModal'));
+        modal.hide();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadContratos(); // Recargar la tabla
+        } else {
+            showToast('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        // Cerrar el modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteContratoModal'));
+        modal.hide();
+        
+        showToast('Error de conexión al eliminar contrato', 'error');
+        console.error('Error:', error);
+    });
 }
 
 // Función auxiliar para mostrar mensajes toast

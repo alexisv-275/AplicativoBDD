@@ -368,6 +368,44 @@ def api_delete_personal_medico(id_hospital, id_personal):
             'error': str(e)
         }), 500
 
+@app.route('/api/personal-medico-with-contrato', methods=['POST'])
+def api_create_personal_medico_with_contrato():
+    """API para crear personal médico + contrato integrado"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No se recibieron datos'
+            }), 400
+            
+        personal_data = data.get('personal_data')
+        salario = data.get('salario')
+        fecha_contrato = data.get('fecha_contrato')
+        
+        if not personal_data or not salario:
+            return jsonify({
+                'success': False,
+                'error': 'Faltan datos requeridos (personal_data y salario)'
+            }), 400
+        
+        # Crear personal médico + contrato
+        result = personal_medico_model.create_personal_medico_with_contrato(
+            personal_data, salario, fecha_contrato
+        )
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # ==================== RUTAS DE CONTRATOS ====================
 
 @app.route('/contratos')

@@ -104,9 +104,43 @@ def test_contrato_insertion():
             if nuevo_contrato:
                 print(f"   ✅ Contrato confirmado: Salario ${nuevo_contrato['Salario']}, Fecha {nuevo_contrato['Fecha_Contrato']}")
                 
-                # Limpiar - eliminar el contrato de prueba
-                contratos_manager.delete_contrato(test_hospital_id, test_personal_id)
-                print("   🧹 Contrato de prueba eliminado")
+                # Test 5: Probar actualización
+                print("\n5. PROBANDO ACTUALIZACIÓN CON SP:")
+                nuevo_salario = 3500.00
+                nueva_fecha = date(2025, 8, 1)
+                
+                update_result = contratos_manager.update_contrato(test_hospital_id, test_personal_id, nuevo_salario, nueva_fecha)
+                if update_result:
+                    print("   ✅ Actualización con SP exitosa!")
+                    
+                    # Verificar actualización
+                    contrato_actualizado = contratos_manager.get_contrato_by_ids(test_hospital_id, test_personal_id)
+                    if contrato_actualizado:
+                        print(f"   ✅ Contrato actualizado: Salario ${contrato_actualizado['Salario']}, Fecha {contrato_actualizado['Fecha_Contrato']}")
+                    else:
+                        print("   ⚠️ No se encontró el contrato después de actualizar")
+                else:
+                    print("   ❌ Error en actualización con SP")
+                
+                # Test 6: Probar eliminación
+                print("\n6. PROBANDO ELIMINACIÓN CON SP:")
+                delete_result = contratos_manager.delete_contrato(test_hospital_id, test_personal_id)
+                if delete_result:
+                    print("   ✅ Eliminación con SP exitosa!")
+                    
+                    # Verificar eliminación
+                    contrato_eliminado = contratos_manager.get_contrato_by_ids(test_hospital_id, test_personal_id)
+                    if contrato_eliminado is None:
+                        print("   ✅ Contrato eliminado correctamente")
+                    else:
+                        print("   ⚠️ El contrato todavía existe después de eliminar")
+                else:
+                    print("   ❌ Error en eliminación con SP")
+                    
+                    # Si falló la eliminación, limpiar manualmente
+                    print("   🧹 Intentando limpieza manual...")
+                    contratos_manager.delete_contrato(test_hospital_id, test_personal_id)
+                    
             else:
                 print("   ⚠️ Contrato no encontrado después de inserción")
         else:
@@ -114,11 +148,6 @@ def test_contrato_insertion():
             
     except Exception as e:
         print(f"   ❌ Error durante inserción con SP y fecha: {e}")
-        import traceback
-        traceback.print_exc()
-            
-    except Exception as e:
-        print(f"   ❌ Error durante inserción: {e}")
         import traceback
         traceback.print_exc()
     

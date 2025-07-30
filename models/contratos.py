@@ -94,58 +94,48 @@ class ContratosManager(DatabaseConnection):
             return False
 
     def update_contrato(self, id_hospital, id_personal, salario, fecha_contrato=None):
-        """Actualizar un contrato existente"""
+        """Actualizar un contrato existente usando Stored Procedure"""
         try:
             connection = self.get_connection()
+            if not connection:
+                return False
+                
             cursor = connection.cursor()
             
-            if fecha_contrato:
-                query = """
-                UPDATE Contratos 
-                SET Salario = ?, Fecha_Contrato = ?
-                WHERE ID_Hospital = ? AND ID_Personal = ?
-                """
-                cursor.execute(query, (salario, fecha_contrato, id_hospital, id_personal))
-            else:
-                query = """
-                UPDATE Contratos 
-                SET Salario = ?
-                WHERE ID_Hospital = ? AND ID_Personal = ?
-                """
-                cursor.execute(query, (salario, id_hospital, id_personal))
+            # Ejecutar el Stored Procedure ActualizarContrato
+            cursor.execute("{CALL ActualizarContrato (?, ?, ?, ?)}", 
+                         (id_hospital, id_personal, salario, fecha_contrato))
             
-            if cursor.rowcount > 0:
-                connection.commit()
-                cursor.close()
-                connection.close()
-                return True
-            else:
-                cursor.close()
-                connection.close()
-                return False
+            # Confirmar la transacción
+            connection.commit()
+            
+            cursor.close()
+            connection.close()
+            return True
                 
         except Exception as e:
             print(f"Error al actualizar contrato: {e}")
             return False
 
     def delete_contrato(self, id_hospital, id_personal):
-        """Eliminar un contrato"""
+        """Eliminar un contrato usando Stored Procedure"""
         try:
             connection = self.get_connection()
+            if not connection:
+                return False
+                
             cursor = connection.cursor()
             
-            query = "DELETE FROM Contratos WHERE ID_Hospital = ? AND ID_Personal = ?"
-            cursor.execute(query, (id_hospital, id_personal))
+            # Ejecutar el Stored Procedure EliminarContrato
+            cursor.execute("{CALL EliminarContrato (?, ?)}", 
+                         (id_hospital, id_personal))
             
-            if cursor.rowcount > 0:
-                connection.commit()
-                cursor.close()
-                connection.close()
-                return True
-            else:
-                cursor.close()
-                connection.close()
-                return False
+            # Confirmar la transacción
+            connection.commit()
+            
+            cursor.close()
+            connection.close()
+            return True
                 
         except Exception as e:
             print(f"Error al eliminar contrato: {e}")
