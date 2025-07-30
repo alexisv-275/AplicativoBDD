@@ -9,31 +9,29 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-heart-pulse"></i> Especialidades Médicas</h2>
-            <p class="text-muted">Gestione las áreas de especialización médica disponibles en el sistema</p>
+            <p class="text-muted">Gestione las áreas de especialización médica disponibles en el sistema
+                {% if current_node %}
+                    <span class="badge bg-info ms-2 node-indicator">Nodo: {{ current_node }}</span>
+                {% endif %}
+            </p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" onclick="loadEspecialidades()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
+            </button>
+            <button class="btn btn-success ms-2">
                 <i class="bi bi-plus-circle"></i> Nueva Especialidad
             </button>
         </div>
     </div>
 
-    <!-- Búsqueda y filtros -->
+    <!-- Búsqueda -->
     <div class="row mb-4">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control" placeholder="Buscar por ID o área de especialidad...">
             </div>
-        </div>
-        <div class="col-md-4">
-            <select class="form-select">
-                <option>Todas las áreas</option>
-                <option>Medicina Interna</option>
-                <option>Cirugía</option>
-                <option>Pediatría</option>
-                <option>Ginecología</option>
-            </select>
         </div>
     </div>
 
@@ -42,7 +40,7 @@
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="bi bi-hospital"></i> Catálogo de Especialidades
-                <span class="badge bg-secondary ms-2">12 especialidades</span>
+                <span class="badge bg-secondary ms-2">{{ especialidades|length }} especialidades</span>
             </h5>
         </div>
         <div class="card-body p-0">
@@ -56,102 +54,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="text-center"><strong>1</strong></td>
-                            <td>Cardiología</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>2</strong></td>
-                            <td>Pediatría</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>3</strong></td>
-                            <td>Ginecología y Obstetricia</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>4</strong></td>
-                            <td>Medicina Interna</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>5</strong></td>
-                            <td>Traumatología</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>6</strong></td>
-                            <td>Neurología</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>7</strong></td>
-                            <td>Dermatología</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center"><strong>8</strong></td>
-                            <td>Oftalmología</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-warning me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        {% if especialidades %}
+                            {% for especialidad in especialidades %}
+                            <tr>
+                                <td class="text-center"><strong>{{ especialidad.ID_Especialidad }}</strong></td>
+                                <td>{{ especialidad.Área }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-warning me-1" 
+                                            onclick="editEspecialidad({{ especialidad.ID_Especialidad }})" 
+                                            title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteEspecialidad({{ especialidad.ID_Especialidad }})" 
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">No se encontraron especialidades</p>
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -159,10 +88,13 @@
             <div class="card-footer bg-light text-muted text-center py-2">
                 <small>
                     <i class="bi bi-mouse"></i> Desplázate para ver más especialidades • 
-                    <strong>8 de 12</strong> especialidades médicas mostradas
+                    <strong>{{ especialidades|length }}</strong> especialidades médicas mostradas
                 </small>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Incluir el script específico para especialidades -->
+<script src="{{ url_for('static', filename='js/especialidad.js') }}"></script>
 {% endblock %}

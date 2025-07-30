@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from models.pacientes import PacientesModel
 from models.atencion_medica import AtencionMedicaModel
 from models.experiencia import ExperienciaModel
+from models.especialidad import EspecialidadModel
 import os
 from dotenv import load_dotenv
 
@@ -15,6 +16,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'tu_clave_secreta_aqui')
 pacientes_model = PacientesModel()
 atencion_medica_model = AtencionMedicaModel()
 experiencia_model = ExperienciaModel()
+especialidad_model = EspecialidadModel()
 
 @app.route('/')
 def index():
@@ -359,8 +361,99 @@ def api_search_experiencias():
 
 @app.route('/especialidad')
 def especialidad():
-    """Módulo de especialidades médicas"""
-    return render_template('especialidad.html')
+    """Módulo de especialidades médicas - Carga desde tabla Especialidad"""
+    try:
+        result = especialidad_model.get_all_especialidades()
+        
+        return render_template('especialidad.html', 
+                             especialidades=result['especialidades'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar especialidades: {str(e)}', 'error')
+        return render_template('especialidad.html', 
+                             especialidades=[], 
+                             current_node='quito')
+
+@app.route('/api/especialidades')
+def api_especialidades():
+    """API para obtener especialidades en formato JSON"""
+    try:
+        result = especialidad_model.get_all_especialidades()
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'node': result['node'],
+                'especialidades': result['especialidades'],
+                'total': result['total']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error'],
+                'node': result['node']
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/especialidades/add', methods=['POST'])
+def api_add_especialidad():
+    """API para agregar nueva especialidad"""
+    try:
+        data = request.get_json()
+        
+        result = especialidad_model.create_especialidad(data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/especialidades/<int:id_especialidad>', methods=['PUT'])
+def api_update_especialidad(id_especialidad):
+    """API para actualizar una especialidad"""
+    try:
+        data = request.get_json()
+        
+        result = especialidad_model.update_especialidad(id_especialidad, data)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/especialidades/<int:id_especialidad>', methods=['DELETE'])
+def api_delete_especialidad(id_especialidad):
+    """API para eliminar una especialidad"""
+    try:
+        result = especialidad_model.delete_especialidad(id_especialidad)
+        
+        return jsonify(result)
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/especialidades/search')
+def api_search_especialidades():
+    """API para buscar especialidades"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
+        
+        result = especialidad_model.search_especialidades(query)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
 
 @app.route('/tipo-atencion')
 def tipo_atencion():
