@@ -6,7 +6,7 @@ class ContratosManager(DatabaseConnection):
         super().__init__()
 
     def get_all_contratos(self):
-        """Obtener todos los contratos de la tabla Contratos"""
+        """Obtener todos los contratos de la tabla Contratos (sin filtrado por nodo)"""
         try:
             connection = self.get_connection()
             cursor = connection.cursor()
@@ -70,25 +70,21 @@ class ContratosManager(DatabaseConnection):
             return None
 
     def create_contrato(self, id_hospital, id_personal, salario, fecha_contrato=None):
-        """Crear un nuevo contrato"""
+        """Crear un nuevo contrato usando Stored Procedure"""
         try:
             connection = self.get_connection()
+            if not connection:
+                return False
+                
             cursor = connection.cursor()
             
-            if fecha_contrato:
-                query = """
-                INSERT INTO Contratos (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
-                VALUES (?, ?, ?, ?)
-                """
-                cursor.execute(query, (id_hospital, id_personal, salario, fecha_contrato))
-            else:
-                query = """
-                INSERT INTO Contratos (ID_Hospital, ID_Personal, Salario)
-                VALUES (?, ?, ?)
-                """
-                cursor.execute(query, (id_hospital, id_personal, salario))
+            # Ejecutar el Stored Procedure CrearContrato
+            cursor.execute("{CALL CrearContrato (?, ?, ?, ?)}", 
+                         (id_hospital, id_personal, salario, fecha_contrato))
             
+            # Confirmar la transacción
             connection.commit()
+            
             cursor.close()
             connection.close()
             return True
@@ -156,7 +152,7 @@ class ContratosManager(DatabaseConnection):
             return False
 
     def search_contratos(self, search_term):
-        """Buscar contratos por término de búsqueda"""
+        """Buscar contratos por término de búsqueda (sin filtrado por nodo)"""
         try:
             connection = self.get_connection()
             cursor = connection.cursor()
