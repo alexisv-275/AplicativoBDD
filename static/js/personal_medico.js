@@ -151,21 +151,11 @@ function showAddModal() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle"></i> 
+                            Los IDs se asignan automáticamente según el nodo actual
+                        </div>
                         <form id="personalMedicoForm">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="id_hospital" class="form-label">ID Hospital *</label>
-                                    <select class="form-control" id="id_hospital" required>
-                                        <option value="">Seleccione hospital</option>
-                                        <option value="1">Hospital 1 - Quito</option>
-                                        <option value="2">Hospital 2 - Guayaquil</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="id_personal" class="form-label">ID Personal *</label>
-                                    <input type="number" class="form-control" id="id_personal" required>
-                                </div>
-                            </div>
                             <div class="mb-3">
                                 <label for="id_especialidad" class="form-label">ID Especialidad *</label>
                                 <input type="number" class="form-control" id="id_especialidad" required>
@@ -291,21 +281,17 @@ function editPersonalMedico(idHospital, idPersonal) {
 }
 
 function savePersonalMedico() {
-    const idHospital = document.getElementById('id_hospital').value.trim();
-    const idPersonal = document.getElementById('id_personal').value.trim();
     const idEspecialidad = document.getElementById('id_especialidad').value.trim();
     const nombre = document.getElementById('nombre').value.trim();
     const apellido = document.getElementById('apellido').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
     
-    if (!idHospital || !idPersonal || !idEspecialidad || !nombre || !apellido) {
+    if (!idEspecialidad || !nombre || !apellido) {
         showError('Todos los campos marcados con * son obligatorios');
         return;
     }
     
     const data = {
-        ID_Hospital: parseInt(idHospital),
-        ID_Personal: parseInt(idPersonal),
         ID_Especialidad: parseInt(idEspecialidad),
         Nombre: nombre,
         Apellido: apellido,
@@ -322,7 +308,7 @@ function savePersonalMedico() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showSuccess('Personal médico agregado exitosamente');
+            showSuccess(`Personal médico agregado exitosamente con ID ${data.id_personal} en Hospital ${data.id_hospital}`);
             bootstrap.Modal.getInstance(document.getElementById('personalMedicoModal')).hide();
             loadPersonalMedico(); // Recargar datos
         } else {

@@ -5,9 +5,66 @@ class PersonalMedicoModel(DatabaseConnection):
     
     def __init__(self):
         super().__init__()
+        # Configuración de rangos de ID por nodo
+        self.ID_RANGES = {
+            'quito': {'min': 1, 'max': 10},
+            'guayaquil': {'min': 11, 'max': 20}
+        }
+    
+    def get_next_available_id(self, node=None):
+        """Obtiene el siguiente ID disponible según el rango del nodo"""
+        try:
+            current_node = node or self.detect_current_node()
+            if not current_node or current_node not in self.ID_RANGES:
+                return None
+            
+            range_config = self.ID_RANGES[current_node]
+            min_id = range_config['min']
+            max_id = range_config['max']
+            
+            # Consultar IDs existentes en el rango del nodo
+            query = """
+            SELECT ID_Personal 
+            FROM Vista_INF_Personal 
+            WHERE ID_Personal BETWEEN ? AND ?
+            ORDER BY ID_Personal
+            """
+            
+            results = self.execute_query(query, params=[min_id, max_id], node=current_node)
+            
+            if results is None:
+                return min_id  # Si hay error, empezar desde el mínimo
+            
+            # Buscar el primer ID disponible en el rango
+            used_ids = [row['ID_Personal'] for row in results] if results else []
+            
+            for id_candidate in range(min_id, max_id + 1):
+                if id_candidate not in used_ids:
+                    return id_candidate
+            
+            # Si no hay IDs disponibles en el rango
+            return None
+            
+        except Exception as e:
+            print(f"Error obteniendo siguiente ID: {e}")
+            return None
+    
+    def validate_id_range(self, id_personal, node=None):
+        """Valida que el ID esté dentro del rango permitido para el nodo"""
+        try:
+            current_node = node or self.detect_current_node()
+            if not current_node or current_node not in self.ID_RANGES:
+                return False
+            
+            range_config = self.ID_RANGES[current_node]
+            return range_config['min'] <= id_personal <= range_config['max']
+            
+        except Exception as e:
+            print(f"Error validando rango de ID: {e}")
+            return False
     
     def get_all_personal_medico(self, node=None):
-        """Obtiene todo el personal médico desde Vista_INF_Personal filtrado por nodo"""
+        """Obtiene todo el personal médico desde Vista_INF_Personal (sin filtrado por hospital)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -19,21 +76,16 @@ class PersonalMedicoModel(DatabaseConnection):
                     'total': 0
                 }
             
-            # Determinar ID_Hospital según el nodo
-            hospital_id = 1 if current_node == 'quito' else 2
-            
             query = """
             SELECT ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono 
             FROM Vista_INF_Personal 
-            WHERE ID_Hospital = ?
             ORDER BY ID_Personal
             """
-            results = self.execute_query(query, params=[hospital_id], node=current_node)
+            results = self.execute_query(query, node=current_node)
             
             # Debug: Ver qué campos están disponibles
             if results and len(results) > 0:
-                print(f"Personal médico filtrado para nodo {current_node} (Hospital {hospital_id}): {len(results)} registros")
-                print(f"Primer registro: {results[0]}")
+                print(f"Personal médico total: {len(results)} registros")
             
             if results is None:
                 return {
@@ -85,7 +137,7 @@ class PersonalMedicoModel(DatabaseConnection):
             return None
     
     def create_personal_medico(self, personal_data, node=None):
-        """Crea un nuevo personal médico en Vista_INF_Personal"""
+        """Crea un nuevo personal médico con auto-asignación de ID según rango del nodo"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -94,14 +146,26 @@ class PersonalMedicoModel(DatabaseConnection):
                     'error': 'No se puede conectar a ningún nodo'
                 }
             
+            # Auto-asignar ID_Personal según el rango del nodo
+            next_id = self.get_next_available_id(current_node)
+            if next_id is None:
+                range_config = self.ID_RANGES.get(current_node, {})
+                return {
+                    'success': False,
+                    'error': f'No hay IDs disponibles en el rango {range_config.get("min", "?")} - {range_config.get("max", "?")} para el nodo {current_node}'
+                }
+            
+            # Auto-asignar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
             query = """
                 INSERT INTO Vista_INF_Personal (ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono)
                 VALUES (?, ?, ?, ?, ?, ?)
             """
             
             params = (
-                personal_data['ID_Hospital'],
-                personal_data['ID_Personal'], 
+                hospital_id,
+                next_id, 
                 personal_data['ID_Especialidad'],
                 personal_data['Nombre'],
                 personal_data['Apellido'],
@@ -113,7 +177,9 @@ class PersonalMedicoModel(DatabaseConnection):
             if result is not None and result > 0:
                 return {
                     'success': True,
-                    'message': f'Personal médico creado exitosamente en nodo {current_node}'
+                    'message': f'Personal médico creado exitosamente en nodo {current_node}',
+                    'id_personal': next_id,
+                    'id_hospital': hospital_id
                 }
             else:
                 return {
@@ -206,7 +272,7 @@ class PersonalMedicoModel(DatabaseConnection):
             }
     
     def search_personal_medico(self, search_term, node=None):
-        """Busca personal médico por nombre, apellido o ID (filtrado por nodo)"""
+        """Busca personal médico por nombre, apellido o ID (sin filtrado por hospital)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -216,21 +282,16 @@ class PersonalMedicoModel(DatabaseConnection):
                     'personal_medico': []
                 }
             
-            # Determinar ID_Hospital según el nodo
-            hospital_id = 1 if current_node == 'quito' else 2
-            
             query = """
                 SELECT ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono
                 FROM Vista_INF_Personal 
-                WHERE ID_Hospital = ? AND (
-                    Nombre LIKE ? OR Apellido LIKE ? OR 
-                    CAST(ID_Personal AS VARCHAR) LIKE ?
-                )
+                WHERE Nombre LIKE ? OR Apellido LIKE ? OR 
+                      CAST(ID_Personal AS VARCHAR) LIKE ?
                 ORDER BY ID_Personal
             """
             
             search_pattern = f"%{search_term}%"
-            results = self.execute_query(query, (hospital_id, search_pattern, search_pattern, search_pattern), node=current_node)
+            results = self.execute_query(query, (search_pattern, search_pattern, search_pattern), node=current_node)
             
             if results is None:
                 return {
