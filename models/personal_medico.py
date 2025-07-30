@@ -395,3 +395,69 @@ class PersonalMedicoModel(DatabaseConnection):
                 'success': False,
                 'error': f'Error al crear personal médico + contrato: {str(e)}'
             }
+
+    def update_personal_medico_sp(self, id_hospital, id_personal, personal_data):
+        """Actualizar personal médico usando SP_Update_PersonalMedico"""
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {
+                    'success': False,
+                    'error': 'No se pudo establecer conexión'
+                }
+                
+            cursor = connection.cursor()
+            
+            # Ejecutar SP de actualización con transacción distribuida
+            cursor.execute("{CALL SP_Update_PersonalMedico (?, ?, ?, ?, ?, ?)}", 
+                         (id_hospital, id_personal, personal_data['ID_Especialidad'],
+                          personal_data['Nombre'], personal_data['Apellido'], 
+                          personal_data['Teléfono']))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return {
+                'success': True,
+                'message': 'Personal médico actualizado exitosamente'
+            }
+            
+        except Exception as e:
+            print(f"Error en SP_Update_PersonalMedico: {e}")
+            return {
+                'success': False,
+                'error': f'Error al actualizar personal médico: {str(e)}'
+            }
+
+    def delete_personal_medico_sp(self, id_hospital, id_personal):
+        """Eliminar personal médico usando SP_Delete_PersonalMedico"""
+        try:
+            connection = self.get_connection()
+            if not connection:
+                return {
+                    'success': False,
+                    'error': 'No se pudo establecer conexión'
+                }
+                
+            cursor = connection.cursor()
+            
+            # Ejecutar SP de eliminación con transacción distribuida
+            cursor.execute("{CALL SP_Delete_PersonalMedico (?, ?)}", 
+                         (id_hospital, id_personal))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return {
+                'success': True,
+                'message': 'Personal médico eliminado exitosamente'
+            }
+            
+        except Exception as e:
+            print(f"Error en SP_Delete_PersonalMedico: {e}")
+            return {
+                'success': False,
+                'error': f'Error al eliminar personal médico: {str(e)}'
+            }

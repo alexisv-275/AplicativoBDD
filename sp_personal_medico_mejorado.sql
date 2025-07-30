@@ -95,6 +95,57 @@ BEGIN
 END;
 
 -- ===============================================
+-- STORED PROCEDURE PARA ACTUALIZAR PERSONAL MÉDICO
+-- ===============================================
+
+CREATE PROCEDURE SP_Update_PersonalMedico
+    @ID_Hospital INT,
+    @ID_Personal INT,
+    @ID_Especialidad INT,
+    @Nombre VARCHAR(50),
+    @Apellido VARCHAR(50),
+    @Teléfono VARCHAR(20)
+AS
+BEGIN
+    SET XACT_ABORT ON;
+    
+    -- Usar transacción distribuida para vista particionada actualizable
+    BEGIN DISTRIBUTED TRANSACTION;
+    
+    BEGIN TRY
+        -- 1. Validar que existe el personal médico
+        IF NOT EXISTS (SELECT 1 FROM Vista_INF_Personal WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal)
+        BEGIN
+            RAISERROR('No existe personal médico con Hospital %d y Personal %d', 16, 1, @ID_Hospital, @ID_Personal);
+            RETURN;
+        END
+        
+        -- 2. Actualizar en Vista_INF_Personal (particionada entre servidores)
+        UPDATE Vista_INF_Personal 
+        SET ID_Especialidad = @ID_Especialidad,
+            Nombre = @Nombre,
+            Apellido = @Apellido,
+            Teléfono = @Teléfono
+        WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal;
+        
+        COMMIT TRANSACTION;
+        
+        SELECT 'Personal médico actualizado exitosamente en vista particionada' AS Resultado;
+        
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        
+        -- Re-lanzar el error con información detallada
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+        
+        RAISERROR('Error en SP_Update_PersonalMedico: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
+    END CATCH
+END;
+
+-- ===============================================
 -- VERSIÓN ALTERNATIVA: DISTRIBUTED TRANSACTION
 -- (Solo si tienes múltiples servidores SQL Server)
 -- ===============================================

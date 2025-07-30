@@ -268,22 +268,22 @@ function editPersonalMedico(idHospital, idPersonal) {
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="id_especialidad" class="form-label">ID Especialidad *</label>
-                                <input type="number" class="form-control" id="id_especialidad" value="${personal.ID_Especialidad || ''}" required>
+                                <label for="edit_id_especialidad" class="form-label">ID Especialidad *</label>
+                                <input type="number" class="form-control" id="edit_id_especialidad" value="${personal.ID_Especialidad || ''}" required>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="nombre" class="form-label">Nombre *</label>
-                                    <input type="text" class="form-control" id="nombre" value="${personal.Nombre || ''}" required>
+                                    <label for="edit_nombre" class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" id="edit_nombre" value="${personal.Nombre || ''}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="apellido" class="form-label">Apellido *</label>
-                                    <input type="text" class="form-control" id="apellido" value="${personal.Apellido || ''}" required>
+                                    <label for="edit_apellido" class="form-label">Apellido *</label>
+                                    <input type="text" class="form-control" id="edit_apellido" value="${personal.Apellido || ''}" required>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="telefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" id="telefono" value="${personal.Teléfono || ''}">
+                                <label for="edit_telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="edit_telefono" value="${personal.Teléfono || ''}">
                             </div>
                         </form>
                     </div>
@@ -356,12 +356,21 @@ function savePersonalMedico() {
 function updatePersonalMedico() {
     const idHospital = document.getElementById('personalMedicoIdHospital').value;
     const idPersonal = document.getElementById('personalMedicoIdPersonal').value;
-    const idEspecialidad = document.getElementById('id_especialidad').value.trim();
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
+    const idEspecialidad = document.getElementById('edit_id_especialidad').value.trim();
+    const nombre = document.getElementById('edit_nombre').value.trim();
+    const apellido = document.getElementById('edit_apellido').value.trim();
+    const telefono = document.getElementById('edit_telefono').value.trim();
+    
+    console.log('🔧 DEBUG UPDATE - Valores del formulario:');
+    console.log('  ID Hospital:', idHospital);
+    console.log('  ID Personal:', idPersonal);
+    console.log('  ID Especialidad:', idEspecialidad);
+    console.log('  Nombre:', nombre);
+    console.log('  Apellido:', apellido);
+    console.log('  Teléfono:', telefono);
     
     if (!idEspecialidad || !nombre || !apellido) {
+        console.log('❌ Validación fallida - campos vacíos');
         showError('Todos los campos marcados con * son obligatorios');
         return;
     }
@@ -373,6 +382,9 @@ function updatePersonalMedico() {
         Teléfono: telefono
     };
     
+    console.log('📤 Enviando datos:', data);
+    console.log('📤 URL:', `/api/personal-medico/${idHospital}/${idPersonal}`);
+    
     fetch(`/api/personal-medico/${idHospital}/${idPersonal}`, {
         method: 'PUT',
         headers: {
@@ -380,8 +392,13 @@ function updatePersonalMedico() {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 Respuesta HTTP:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('📊 Respuesta del servidor:', data);
+        
         if (data.success) {
             showSuccess('Personal médico actualizado exitosamente');
             bootstrap.Modal.getInstance(document.getElementById('personalMedicoModal')).hide();
@@ -391,7 +408,7 @@ function updatePersonalMedico() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('💥 Error en fetch:', error);
         showError('Error de conexión al actualizar personal médico');
     });
 }
@@ -400,24 +417,69 @@ function deletePersonalMedico(idHospital, idPersonal) {
     const personal = personalMedicoData.find(p => p.ID_Hospital === idHospital && p.ID_Personal === idPersonal);
     if (!personal) return;
     
-    if (confirm(`¿Está seguro de eliminar al personal médico "${personal.Nombre} ${personal.Apellido}"?`)) {
-        fetch(`/api/personal-medico/${idHospital}/${idPersonal}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess('Personal médico eliminado exitosamente');
-                loadPersonalMedico(); // Recargar datos
-            } else {
-                showError('Error al eliminar personal médico: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('Error de conexión al eliminar personal médico');
-        });
-    }
+    console.log('🗑️ DEBUG DELETE - Iniciando eliminación:', { idHospital, idPersonal, personal });
+    
+    // Crear modal de confirmación Bootstrap
+    const confirmModal = `
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Está seguro de eliminar al personal médico?</p>
+                        <p><strong>${personal.Nombre} ${personal.Apellido}</strong></p>
+                        <p class="text-muted">Esta acción no se puede deshacer.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmDeletePersonalMedico(${idHospital}, ${idPersonal})">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior si existe y agregar nuevo
+    const existingModal = document.getElementById('deleteConfirmModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', confirmModal);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+function confirmDeletePersonalMedico(idHospital, idPersonal) {
+    console.log('🗑️ DEBUG DELETE - Confirmación recibida:', { idHospital, idPersonal });
+    
+    // Cerrar modal de confirmación
+    bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+    
+    fetch(`/api/personal-medico/${idHospital}/${idPersonal}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        console.log('🗑️ DEBUG DELETE - Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('🗑️ DEBUG DELETE - Response data:', data);
+        
+        if (data.success) {
+            showSuccess('Personal médico eliminado exitosamente');
+            loadPersonalMedico(); // Recargar datos
+        } else {
+            showError('Error al eliminar personal médico: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error en DELETE:', error);
+        showError('Error de conexión al eliminar personal médico');
+    });
 }
 
 function updateNodeIndicator(node) {

@@ -335,10 +335,34 @@ def api_add_personal_medico():
 
 @app.route('/api/personal-medico/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
 def api_update_personal_medico(id_hospital, id_personal):
-    """API para actualizar un personal médico"""
+    """API para actualizar un personal médico usando SP"""
     try:
         data = request.get_json()
-        result = personal_medico_model.update_personal_medico(id_hospital, id_personal, data)
+        
+        print(f"🔧 DEBUG UPDATE - IDs: hospital={id_hospital}, personal={id_personal}")
+        print(f"🔧 DEBUG UPDATE - Datos recibidos: {data}")
+        
+        if not data:
+            print("❌ ERROR: No se recibieron datos")
+            return jsonify({
+                'success': False,
+                'error': 'No se recibieron datos'
+            }), 400
+        
+        # Verificar campos requeridos
+        required_fields = ['ID_Especialidad', 'Nombre', 'Apellido']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            print(f"❌ ERROR: Campos faltantes: {missing_fields}")
+            return jsonify({
+                'success': False,
+                'error': f'Campos obligatorios faltantes: {", ".join(missing_fields)}'
+            }), 400
+        
+        result = personal_medico_model.update_personal_medico_sp(id_hospital, id_personal, data)
+        
+        print(f"🔧 DEBUG UPDATE - Resultado: {result}")
         
         if result['success']:
             return jsonify(result)
@@ -346,6 +370,7 @@ def api_update_personal_medico(id_hospital, id_personal):
             return jsonify(result), 400
             
     except Exception as e:
+        print(f"💥 ERROR en UPDATE: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -353,9 +378,13 @@ def api_update_personal_medico(id_hospital, id_personal):
 
 @app.route('/api/personal-medico/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
 def api_delete_personal_medico(id_hospital, id_personal):
-    """API para eliminar un personal médico"""
+    """API para eliminar un personal médico usando SP"""
     try:
-        result = personal_medico_model.delete_personal_medico(id_hospital, id_personal)
+        print(f'🗑️ DEBUG DELETE - IDs: hospital={id_hospital}, personal={id_personal}')
+        
+        result = personal_medico_model.delete_personal_medico_sp(id_hospital, id_personal)
+        
+        print(f'🗑️ DEBUG DELETE - Resultado: {result}')
         
         if result['success']:
             return jsonify(result)
@@ -363,6 +392,7 @@ def api_delete_personal_medico(id_hospital, id_personal):
             return jsonify(result), 400
             
     except Exception as e:
+        print(f'💥 ERROR DELETE: {e}')
         return jsonify({
             'success': False,
             'error': str(e)
