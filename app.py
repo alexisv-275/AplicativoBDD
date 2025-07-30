@@ -5,6 +5,7 @@ from models.experiencia import ExperienciaModel
 from models.especialidad import EspecialidadModel
 from models.tipo_atencion import TipoAtencionModel
 from models.personal_medico import PersonalMedicoModel
+from models.contratos import ContratosManager
 import os
 from dotenv import load_dotenv
 
@@ -366,6 +367,124 @@ def api_delete_personal_medico(id_hospital, id_personal):
             'success': False,
             'error': str(e)
         }), 500
+
+# ==================== RUTAS DE CONTRATOS ====================
+
+@app.route('/contratos')
+def contratos():
+    """Módulo de contratos - Carga desde tabla Contratos"""
+    try:
+        contratos_manager = ContratosManager()
+        contratos = contratos_manager.get_all_contratos()
+        current_node = "Quito" if len(contratos) > 0 and contratos[0].get('ID_Hospital') == 1 else "Guayaquil"
+        
+        return render_template('contratos.html', 
+                             contratos=contratos,
+                             current_node=current_node)
+        
+    except Exception as e:
+        flash(f'Error al cargar contratos: {str(e)}', 'error')
+        return render_template('contratos.html', contratos=[])
+
+@app.route('/api/contratos')
+def api_contratos():
+    """API para obtener todos los contratos"""
+    try:
+        contratos_manager = ContratosManager()
+        contratos = contratos_manager.get_all_contratos()
+        
+        return jsonify({
+            'success': True,
+            'contratos': contratos,
+            'total': len(contratos)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'contratos': []
+        }), 500
+
+@app.route('/api/contratos/search')
+def api_search_contratos():
+    """API para buscar contratos"""
+    try:
+        search_term = request.args.get('q', '')
+        contratos_manager = ContratosManager()
+        contratos = contratos_manager.search_contratos(search_term)
+        
+        return jsonify({
+            'success': True,
+            'contratos': contratos,
+            'total': len(contratos)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'contratos': []
+        }), 500
+
+@app.route('/api/contratos/add', methods=['POST'])
+def api_add_contrato():
+    """API para agregar un nuevo contrato"""
+    try:
+        data = request.get_json()
+        contratos_manager = ContratosManager()
+        
+        result = contratos_manager.create_contrato(
+            data['id_hospital'],
+            data['id_personal'],
+            data['salario'],
+            data.get('fecha_contrato')
+        )
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Contrato creado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'Error al crear contrato'}), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/contratos/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
+def api_update_contrato(id_hospital, id_personal):
+    """API para actualizar un contrato"""
+    try:
+        data = request.get_json()
+        contratos_manager = ContratosManager()
+        
+        result = contratos_manager.update_contrato(
+            id_hospital,
+            id_personal,
+            data['salario'],
+            data.get('fecha_contrato')
+        )
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Contrato actualizado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'Contrato no encontrado'}), 404
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/contratos/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
+def api_delete_contrato(id_hospital, id_personal):
+    """API para eliminar un contrato"""
+    try:
+        contratos_manager = ContratosManager()
+        result = contratos_manager.delete_contrato(id_hospital, id_personal)
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Contrato eliminado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'Contrato no encontrado'}), 404
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/experiencia')
 def experiencia():

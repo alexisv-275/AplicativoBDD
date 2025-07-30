@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Contratos - Sistema Hospitalario{% endblock %}
+{% block page_title %}Contratos{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <!-- Header con botón agregar y actualizar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-file-text"></i> Contratos</h2>
+            <p class="text-muted">Gestione los contratos del personal médico
+                {% if current_node %}
+                    <span class="badge bg-info ms-2 node-indicator">Nodo: {{ current_node }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" onclick="loadContratos()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
+            </button>
+            <button class="btn btn-success ms-2" onclick="showAddContratoModal()">
+                <i class="bi bi-plus-circle"></i> Nuevo Contrato
+            </button>
+        </div>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Buscar por ID hospital, ID personal o salario..." onkeyup="searchContratos()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de contratos -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-file-text"></i> Contratos Registrados
+                <span class="badge bg-secondary ms-2" id="contratosCount">{{ contratos|length if contratos else 0 }} registros</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="height: 600px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0" id="contratosTable">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="text-center" style="width: 120px;">ID Hospital</th>
+                            <th class="text-center" style="width: 120px;">ID Personal</th>
+                            <th class="text-center" style="width: 150px;">Salario</th>
+                            <th class="text-center" style="width: 150px;">Fecha Contrato</th>
+                            <th class="text-center" style="width: 100px;">Nodo</th>
+                            <th class="text-center" style="width: 120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contratosTableBody">
+                        {% if contratos and contratos|length > 0 %}
+                            {% for contrato in contratos %}
+                            <tr>
+                                <td class="text-center"><strong>{{ contrato.ID_Hospital }}</strong></td>
+                                <td class="text-center"><strong>{{ contrato.ID_Personal }}</strong></td>
+                                <td class="text-center">${{ "{:,.2f}".format(contrato.Salario) if contrato.Salario else 'N/A' }}</td>
+                                <td class="text-center">{{ contrato.Fecha_Contrato.strftime('%Y-%m-%d') if contrato.Fecha_Contrato else 'N/A' }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ 'success' if contrato.ID_Hospital == 1 else 'info' }}">
+                                        {{ 'Quito' if contrato.ID_Hospital == 1 else 'Guayaquil' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-warning me-1" 
+                                            onclick="editContrato({{ contrato.ID_Hospital }}, {{ contrato.ID_Personal }})" 
+                                            title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteContrato({{ contrato.ID_Hospital }}, {{ contrato.ID_Personal }})" 
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">No hay contratos disponibles</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indicador de scrollbar y total de registros -->
+            <div class="card-footer bg-light text-muted text-center py-2">
+                <small id="info-registros">
+                    <i class="bi bi-mouse"></i> Desplázate para ver más contratos • 
+                    <strong id="totalContratos">{{ contratos|length if contratos else 0 }}</strong> contratos mostrados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar contrato -->
+<div class="modal fade" id="contratoModal" tabindex="-1" aria-labelledby="contratoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contratoModalLabel">Nuevo Contrato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contratoForm">
+                    <div class="mb-3">
+                        <label for="idHospital" class="form-label">ID Hospital *</label>
+                        <select class="form-select" id="idHospital" required>
+                            <option value="">Seleccione un hospital</option>
+                            <option value="1">1 - Hospital Quito</option>
+                            <option value="2">2 - Hospital Guayaquil</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="idPersonal" class="form-label">ID Personal *</label>
+                        <input type="number" class="form-control" id="idPersonal" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="salario" class="form-label">Salario *</label>
+                        <input type="number" class="form-control" id="salario" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaContrato" class="form-label">Fecha de Contrato</label>
+                        <input type="date" class="form-control" id="fechaContrato">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveContrato()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script específico para contratos -->
+<script src="{{ url_for('static', filename='js/contratos.js') }}"></script>
+{% endblock %}
