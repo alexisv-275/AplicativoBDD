@@ -4,6 +4,7 @@ from models.atencion_medica import AtencionMedicaModel
 from models.experiencia import ExperienciaModel
 from models.especialidad import EspecialidadModel
 from models.tipo_atencion import TipoAtencionModel
+from models.personal_medico import PersonalMedicoModel
 import os
 from dotenv import load_dotenv
 
@@ -19,6 +20,7 @@ atencion_medica_model = AtencionMedicaModel()
 experiencia_model = ExperienciaModel()
 especialidad_model = EspecialidadModel()
 tipo_atencion_model = TipoAtencionModel()
+personal_medico_model = PersonalMedicoModel()
 
 @app.route('/')
 def index():
@@ -262,8 +264,108 @@ def api_search_atenciones():
 
 @app.route('/personal')
 def personal():
-    """Módulo de personal médico"""
-    return render_template('personal.html')
+    """Módulo de gestión de personal médico - Carga desde Vista_INF_Personal"""
+    try:
+        result = personal_medico_model.get_all_personal_medico()
+        
+        return render_template('personal.html', 
+                             personal_medico=result['personal_medico'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar personal médico: {str(e)}', 'error')
+        return render_template('personal.html', 
+                             personal_medico=[], 
+                             current_node='quito')
+
+@app.route('/api/personal-medico')
+def api_personal_medico():
+    """API para obtener personal médico en formato JSON"""
+    try:
+        result = personal_medico_model.get_all_personal_medico()
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/personal-medico/search')
+def api_search_personal_medico():
+    """API para buscar personal médico"""
+    try:
+        search_term = request.args.get('q', '')
+        result = personal_medico_model.search_personal_medico(search_term)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'personal_medico': []
+        })
+
+@app.route('/api/personal-medico/add', methods=['POST'])
+def api_add_personal_medico():
+    """API para agregar un nuevo personal médico"""
+    try:
+        data = request.get_json()
+        result = personal_medico_model.create_personal_medico(data)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/personal-medico/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
+def api_update_personal_medico(id_hospital, id_personal):
+    """API para actualizar un personal médico"""
+    try:
+        data = request.get_json()
+        result = personal_medico_model.update_personal_medico(id_hospital, id_personal, data)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/personal-medico/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
+def api_delete_personal_medico(id_hospital, id_personal):
+    """API para eliminar un personal médico"""
+    try:
+        result = personal_medico_model.delete_personal_medico(id_hospital, id_personal)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/experiencia')
 def experiencia():
