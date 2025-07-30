@@ -7,7 +7,7 @@ class ExperienciaModel(DatabaseConnection):
         super().__init__()
     
     def get_all_experiencias(self, node=None):
-        """Obtiene todas las experiencias desde Vista_Experiencia"""
+        """Obtiene todas las experiencias desde Vista_Experiencia filtrado por nodo"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -19,12 +19,19 @@ class ExperienciaModel(DatabaseConnection):
                     'total': 0
                 }
             
-            query = "SELECT * FROM Vista_Experiencia ORDER BY ID_Hospital, ID_Personal"
-            results = self.execute_query(query, node=current_node)
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            query = """
+            SELECT * FROM Vista_Experiencia 
+            WHERE ID_Hospital = ?
+            ORDER BY ID_Personal
+            """
+            results = self.execute_query(query, params=[hospital_id], node=current_node)
             
             # Debug: Ver qué campos están disponibles
-            if results and len(results) > 0:
-                print(f"Campos disponibles en Vista_Experiencia: {list(results[0].keys())}")
+            if results and isinstance(results, list) and len(results) > 0:
+                print(f"Experiencias filtradas para nodo {current_node} (Hospital {hospital_id}): {len(results)} registros")
                 print(f"Primer registro: {results[0]}")
             
             if results is None:
@@ -40,7 +47,7 @@ class ExperienciaModel(DatabaseConnection):
                 'success': True,
                 'experiencias': results,
                 'node': current_node,
-                'total': len(results),
+                'total': len(results) if isinstance(results, list) else 0,
                 'error': None
             }
             
@@ -194,7 +201,7 @@ class ExperienciaModel(DatabaseConnection):
             }
     
     def search_experiencias(self, search_term, node=None):
-        """Busca experiencias por cargo, ID_Personal o años de experiencia"""
+        """Busca experiencias por cargo, ID_Personal o años de experiencia (filtrado por nodo)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -204,16 +211,21 @@ class ExperienciaModel(DatabaseConnection):
                     'experiencias': []
                 }
             
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
             query = """
                 SELECT * FROM Vista_Experiencia 
-                WHERE Cargo LIKE ? OR 
-                      CAST(ID_Personal AS VARCHAR) LIKE ? OR 
-                      CAST(Años_exp AS VARCHAR) LIKE ?
-                ORDER BY ID_Hospital, ID_Personal
+                WHERE ID_Hospital = ? AND (
+                    Cargo LIKE ? OR 
+                    CAST(ID_Personal AS VARCHAR) LIKE ? OR 
+                    CAST(Años_exp AS VARCHAR) LIKE ?
+                )
+                ORDER BY ID_Personal
             """
             
             search_pattern = f"%{search_term}%"
-            results = self.execute_query(query, (search_pattern, search_pattern, search_pattern), node=current_node)
+            results = self.execute_query(query, (hospital_id, search_pattern, search_pattern, search_pattern), node=current_node)
             
             if results is None:
                 return {
@@ -226,7 +238,7 @@ class ExperienciaModel(DatabaseConnection):
                 'success': True,
                 'experiencias': results,
                 'node': current_node,
-                'total': len(results)
+                'total': len(results) if isinstance(results, list) else 0
             }
             
         except Exception as e:

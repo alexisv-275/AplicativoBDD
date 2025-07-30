@@ -7,7 +7,7 @@ class AtencionMedicaModel(DatabaseConnection):
         super().__init__()
     
     def get_all_atenciones(self, node=None):
-        """Obtiene todas las atenciones médicas desde Vista_Atencion_Medica"""
+        """Obtiene todas las atenciones médicas desde Vista_Atencion_Medica filtrado por nodo"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -19,12 +19,19 @@ class AtencionMedicaModel(DatabaseConnection):
                     'total': 0
                 }
             
-            query = "SELECT * FROM Vista_Atencion_Medica ORDER BY ID_Hospital, ID_Atención"
-            results = self.execute_query(query, node=current_node)
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            query = """
+            SELECT * FROM Vista_Atencion_Medica 
+            WHERE ID_Hospital = ?
+            ORDER BY ID_Atención
+            """
+            results = self.execute_query(query, params=[hospital_id], node=current_node)
             
             # Debug: Ver qué campos están disponibles
-            if results and len(results) > 0:
-                print(f"Campos disponibles en Vista_Atencion_Medica: {list(results[0].keys())}")
+            if results and isinstance(results, list) and len(results) > 0:
+                print(f"Atenciones médicas filtradas para nodo {current_node} (Hospital {hospital_id}): {len(results)} registros")
                 print(f"Primer registro: {results[0]}")
             
             if results is None:
@@ -37,17 +44,18 @@ class AtencionMedicaModel(DatabaseConnection):
                 }
             
             # Formatear fechas para el frontend
-            for atencion in results:
-                if atencion.get('Fecha'):
-                    fecha = atencion['Fecha']
-                    if hasattr(fecha, 'strftime'):
-                        atencion['Fecha'] = fecha.strftime('%d/%m/%Y')
+            if isinstance(results, list):
+                for atencion in results:
+                    if atencion.get('Fecha'):
+                        fecha = atencion['Fecha']
+                        if hasattr(fecha, 'strftime'):
+                            atencion['Fecha'] = fecha.strftime('%d/%m/%Y')
             
             return {
                 'success': True,
                 'atenciones': results,
                 'node': current_node,
-                'total': len(results),
+                'total': len(results) if isinstance(results, list) else 0,
                 'error': None
             }
             
@@ -220,7 +228,7 @@ class AtencionMedicaModel(DatabaseConnection):
             }
     
     def search_atenciones(self, search_term, node=None):
-        """Busca atenciones médicas por ID de paciente, personal o atención"""
+        """Busca atenciones médicas por ID de paciente, personal o atención (filtrado por nodo)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -230,19 +238,24 @@ class AtencionMedicaModel(DatabaseConnection):
                     'atenciones': []
                 }
             
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
             query = """
                 SELECT * FROM Vista_Atencion_Medica 
-                WHERE CAST(ID_Paciente AS VARCHAR) LIKE ? OR 
-                      CAST(ID_Personal AS VARCHAR) LIKE ? OR 
-                      CAST(ID_Atención AS VARCHAR) LIKE ? OR
-                      Diagnostico LIKE ? OR
-                      Descripción LIKE ? OR
-                      Tratamiento LIKE ?
-                ORDER BY ID_Hospital, Fecha DESC
+                WHERE ID_Hospital = ? AND (
+                    CAST(ID_Paciente AS VARCHAR) LIKE ? OR 
+                    CAST(ID_Personal AS VARCHAR) LIKE ? OR 
+                    CAST(ID_Atención AS VARCHAR) LIKE ? OR
+                    Diagnostico LIKE ? OR
+                    Descripción LIKE ? OR
+                    Tratamiento LIKE ?
+                )
+                ORDER BY Fecha DESC
             """
             
             search_pattern = f"%{search_term}%"
-            results = self.execute_query(query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern), node=current_node)
+            results = self.execute_query(query, (hospital_id, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern, search_pattern), node=current_node)
             
             if results is None:
                 return {
@@ -252,17 +265,18 @@ class AtencionMedicaModel(DatabaseConnection):
                 }
             
             # Formatear fechas
-            for atencion in results:
-                if atencion.get('Fecha'):
-                    fecha = atencion['Fecha']
-                    if hasattr(fecha, 'strftime'):
-                        atencion['Fecha'] = fecha.strftime('%d/%m/%Y')
+            if isinstance(results, list):
+                for atencion in results:
+                    if atencion.get('Fecha'):
+                        fecha = atencion['Fecha']
+                        if hasattr(fecha, 'strftime'):
+                            atencion['Fecha'] = fecha.strftime('%d/%m/%Y')
             
             return {
                 'success': True,
                 'atenciones': results,
                 'node': current_node,
-                'total': len(results)
+                'total': len(results) if isinstance(results, list) else 0
             }
             
         except Exception as e:

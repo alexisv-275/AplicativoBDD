@@ -7,7 +7,7 @@ class PersonalMedicoModel(DatabaseConnection):
         super().__init__()
     
     def get_all_personal_medico(self, node=None):
-        """Obtiene todo el personal médico desde Vista_INF_Personal"""
+        """Obtiene todo el personal médico desde Vista_INF_Personal filtrado por nodo"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -19,12 +19,20 @@ class PersonalMedicoModel(DatabaseConnection):
                     'total': 0
                 }
             
-            query = "SELECT ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono FROM Vista_INF_Personal ORDER BY ID_Hospital, ID_Personal"
-            results = self.execute_query(query, node=current_node)
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            query = """
+            SELECT ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono 
+            FROM Vista_INF_Personal 
+            WHERE ID_Hospital = ?
+            ORDER BY ID_Personal
+            """
+            results = self.execute_query(query, params=[hospital_id], node=current_node)
             
             # Debug: Ver qué campos están disponibles
             if results and len(results) > 0:
-                print(f"Campos disponibles en Vista_INF_Personal: {list(results[0].keys())}")
+                print(f"Personal médico filtrado para nodo {current_node} (Hospital {hospital_id}): {len(results)} registros")
                 print(f"Primer registro: {results[0]}")
             
             if results is None:
@@ -198,7 +206,7 @@ class PersonalMedicoModel(DatabaseConnection):
             }
     
     def search_personal_medico(self, search_term, node=None):
-        """Busca personal médico por nombre, apellido o ID"""
+        """Busca personal médico por nombre, apellido o ID (filtrado por nodo)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -208,17 +216,21 @@ class PersonalMedicoModel(DatabaseConnection):
                     'personal_medico': []
                 }
             
+            # Determinar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
             query = """
                 SELECT ID_Hospital, ID_Personal, ID_Especialidad, Nombre, Apellido, Teléfono
                 FROM Vista_INF_Personal 
-                WHERE Nombre LIKE ? OR Apellido LIKE ? OR 
-                      CAST(ID_Personal AS VARCHAR) LIKE ? OR
-                      CAST(ID_Hospital AS VARCHAR) LIKE ?
-                ORDER BY ID_Hospital, ID_Personal
+                WHERE ID_Hospital = ? AND (
+                    Nombre LIKE ? OR Apellido LIKE ? OR 
+                    CAST(ID_Personal AS VARCHAR) LIKE ?
+                )
+                ORDER BY ID_Personal
             """
             
             search_pattern = f"%{search_term}%"
-            results = self.execute_query(query, (search_pattern, search_pattern, search_pattern, search_pattern), node=current_node)
+            results = self.execute_query(query, (hospital_id, search_pattern, search_pattern, search_pattern), node=current_node)
             
             if results is None:
                 return {
@@ -231,7 +243,7 @@ class PersonalMedicoModel(DatabaseConnection):
                 'success': True,
                 'personal_medico': results,
                 'node': current_node,
-                'total': len(results)
+                'total': len(results) if isinstance(results, list) else 0
             }
             
         except Exception as e:
