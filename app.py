@@ -3,6 +3,7 @@ from models.pacientes import PacientesModel
 from models.atencion_medica import AtencionMedicaModel
 from models.experiencia import ExperienciaModel
 from models.especialidad import EspecialidadModel
+from models.tipo_atencion import TipoAtencionModel
 import os
 from dotenv import load_dotenv
 
@@ -17,6 +18,7 @@ pacientes_model = PacientesModel()
 atencion_medica_model = AtencionMedicaModel()
 experiencia_model = ExperienciaModel()
 especialidad_model = EspecialidadModel()
+tipo_atencion_model = TipoAtencionModel()
 
 @app.route('/')
 def index():
@@ -457,8 +459,108 @@ def api_search_especialidades():
 
 @app.route('/tipo-atencion')
 def tipo_atencion():
-    """Módulo de tipos de atención"""
-    return render_template('tipo_atencion.html')
+    """Módulo de gestión de tipos de atención - Carga desde tabla Tipo_Atención"""
+    try:
+        result = tipo_atencion_model.get_all_tipos_atencion()
+        
+        return render_template('tipo_atencion.html', 
+                             tipos_atencion=result['tipos_atencion'] if result['success'] else [],
+                             current_node=result['node'])
+    except Exception as e:
+        flash(f'Error al cargar tipos de atención: {str(e)}', 'error')
+        return render_template('tipo_atencion.html', 
+                             tipos_atencion=[], 
+                             current_node='quito')
+
+@app.route('/api/tipos-atencion')
+def api_tipos_atencion():
+    """API para obtener tipos de atención en formato JSON"""
+    try:
+        result = tipo_atencion_model.get_all_tipos_atencion()
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'node': 'unknown'
+        })
+
+@app.route('/api/tipos-atencion/search')
+def api_search_tipos_atencion():
+    """API para buscar tipos de atención"""
+    try:
+        search_term = request.args.get('q', '')
+        result = tipo_atencion_model.search_tipos_atencion(search_term)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'tipos_atencion': []
+        })
+
+@app.route('/api/tipos-atencion/add', methods=['POST'])
+def api_add_tipo_atencion():
+    """API para agregar un nuevo tipo de atención"""
+    try:
+        data = request.get_json()
+        result = tipo_atencion_model.create_tipo_atencion(data)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/tipos-atencion/<int:id_tipo>', methods=['PUT'])
+def api_update_tipo_atencion(id_tipo):
+    """API para actualizar un tipo de atención"""
+    try:
+        data = request.get_json()
+        result = tipo_atencion_model.update_tipo_atencion(id_tipo, data)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/tipos-atencion/<int:id_tipo>', methods=['DELETE'])
+def api_delete_tipo_atencion(id_tipo):
+    """API para eliminar un tipo de atención"""
+    try:
+        result = tipo_atencion_model.delete_tipo_atencion(id_tipo)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
