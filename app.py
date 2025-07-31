@@ -696,12 +696,15 @@ def api_add_especialidad():
     """API para agregar nueva especialidad"""
     try:
         data = request.get_json()
+        print(f'➕ DEBUG CREATE ESPECIALIDAD - Datos recibidos: {data}')
         
         result = especialidad_model.create_especialidad(data)
+        print(f'➕ DEBUG CREATE ESPECIALIDAD - Resultado: {result}')
         
         return jsonify(result)
             
     except Exception as e:
+        print(f'💥 ERROR CREATE ESPECIALIDAD: {e}')
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/especialidades/<int:id_especialidad>', methods=['PUT'])
@@ -709,23 +712,30 @@ def api_update_especialidad(id_especialidad):
     """API para actualizar una especialidad"""
     try:
         data = request.get_json()
+        print(f'🔧 DEBUG UPDATE ESPECIALIDAD - ID: {id_especialidad}, Datos: {data}')
         
         result = especialidad_model.update_especialidad(id_especialidad, data)
+        print(f'🔧 DEBUG UPDATE ESPECIALIDAD - Resultado: {result}')
         
         return jsonify(result)
             
     except Exception as e:
+        print(f'💥 ERROR UPDATE ESPECIALIDAD: {e}')
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/especialidades/<int:id_especialidad>', methods=['DELETE'])
 def api_delete_especialidad(id_especialidad):
     """API para eliminar una especialidad"""
     try:
+        print(f'🗑️ DEBUG DELETE ESPECIALIDAD - ID: {id_especialidad}')
+        
         result = especialidad_model.delete_especialidad(id_especialidad)
+        print(f'🗑️ DEBUG DELETE ESPECIALIDAD - Resultado: {result}')
         
         return jsonify(result)
             
     except Exception as e:
+        print(f'💥 ERROR DELETE ESPECIALIDAD: {e}')
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/especialidades/search')
@@ -803,7 +813,10 @@ def api_add_tipo_atencion():
     """API para agregar un nuevo tipo de atención"""
     try:
         data = request.get_json()
+        print(f'➕ DEBUG CREATE TIPO ATENCIÓN - Datos recibidos: {data}')
+        
         result = tipo_atencion_model.create_tipo_atencion(data)
+        print(f'➕ DEBUG CREATE TIPO ATENCIÓN - Resultado: {result}')
         
         if result['success']:
             return jsonify(result)
@@ -811,6 +824,7 @@ def api_add_tipo_atencion():
             return jsonify(result), 400
             
     except Exception as e:
+        print(f'💥 ERROR CREATE TIPO ATENCIÓN: {e}')
         return jsonify({
             'success': False,
             'error': str(e)
@@ -821,7 +835,10 @@ def api_update_tipo_atencion(id_tipo):
     """API para actualizar un tipo de atención"""
     try:
         data = request.get_json()
+        print(f'🔧 DEBUG UPDATE TIPO ATENCIÓN - ID: {id_tipo}, Datos: {data}')
+        
         result = tipo_atencion_model.update_tipo_atencion(id_tipo, data)
+        print(f'🔧 DEBUG UPDATE TIPO ATENCIÓN - Resultado: {result}')
         
         if result['success']:
             return jsonify(result)
@@ -829,6 +846,7 @@ def api_update_tipo_atencion(id_tipo):
             return jsonify(result), 400
             
     except Exception as e:
+        print(f'💥 ERROR UPDATE TIPO ATENCIÓN: {e}')
         return jsonify({
             'success': False,
             'error': str(e)
@@ -838,7 +856,10 @@ def api_update_tipo_atencion(id_tipo):
 def api_delete_tipo_atencion(id_tipo):
     """API para eliminar un tipo de atención"""
     try:
+        print(f'🗑️ DEBUG DELETE TIPO ATENCIÓN - ID: {id_tipo}')
+        
         result = tipo_atencion_model.delete_tipo_atencion(id_tipo)
+        print(f'🗑️ DEBUG DELETE TIPO ATENCIÓN - Resultado: {result}')
         
         if result['success']:
             return jsonify(result)
@@ -846,6 +867,7 @@ def api_delete_tipo_atencion(id_tipo):
             return jsonify(result), 400
             
     except Exception as e:
+        print(f'💥 ERROR DELETE TIPO ATENCIÓN: {e}')
         return jsonify({
             'success': False,
             'error': str(e)

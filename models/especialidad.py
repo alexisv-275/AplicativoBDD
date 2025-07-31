@@ -75,6 +75,25 @@ class EspecialidadModel(DatabaseConnection):
             print(f"Error obteniendo especialidad: {e}")
             return None
     
+    def get_next_especialidad_id(self, node=None):
+        """Obtiene el siguiente ID disponible para especialidad"""
+        try:
+            current_node = node or self.detect_current_node()
+            if not current_node:
+                return None
+                
+            query = "SELECT ISNULL(MAX(ID_Especialidad), 0) + 1 AS NextID FROM Especialidad"
+            results = self.execute_query(query, node=current_node)
+            
+            if results and len(results) > 0:
+                return results[0]['NextID']
+            else:
+                return 1  # Si la tabla está vacía, empezar en 1
+                
+        except Exception as e:
+            print(f"Error obteniendo siguiente ID especialidad: {e}")
+            return None
+
     def create_especialidad(self, especialidad_data, node=None):
         """Crea una nueva especialidad en la tabla Especialidad"""
         try:
@@ -85,19 +104,30 @@ class EspecialidadModel(DatabaseConnection):
                     'error': 'No se puede conectar a ningún nodo'
                 }
             
+            # Obtener el siguiente ID disponible
+            next_id = self.get_next_especialidad_id(current_node)
+            if next_id is None:
+                return {
+                    'success': False,
+                    'error': 'No se pudo generar ID para la especialidad'
+                }
+            
+            print(f"➕ DEBUG: Generando Especialidad con ID {next_id}")
+            
             query = """
-                INSERT INTO Especialidad (Área)
-                VALUES (?)
+                INSERT INTO Especialidad (ID_Especialidad, Área)
+                VALUES (?, ?)
             """
             
-            params = (especialidad_data['Área'],)
+            params = (next_id, especialidad_data['Área'])
             
             result = self.execute_query(query, params, node=current_node)
             
             if result is not None and result > 0:
                 return {
                     'success': True,
-                    'message': f'Especialidad creada exitosamente en nodo {current_node}'
+                    'message': f'Especialidad creada exitosamente en nodo {current_node} con ID {next_id}',
+                    'id_especialidad': next_id
                 }
             else:
                 return {
