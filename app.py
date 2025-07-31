@@ -233,12 +233,20 @@ def api_add_atencion():
     """API para agregar nueva atención médica"""
     try:
         data = request.get_json()
-        
-        result = atencion_medica_model.create_atencion(data)
-        
+        print(f"🔍 DEBUG API: Datos recibidos para crear atención médica: {data}")
+        # Validar datos requeridos
+        required_fields = ['ID_Personal', 'ID_Paciente', 'ID_Tipo', 'Fecha', 'Diagnostico', 'Descripción', 'Tratamiento']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False,
+                    'error': f'Campo requerido faltante: {field}'
+                })
+        result = atencion_medica_model.create_atencion_medica(data)
+        print(f"🔍 DEBUG API: Resultado creación atención: {result}")
         return jsonify(result)
-            
     except Exception as e:
+        print(f"❌ ERROR API crear atención médica: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['PUT'])
@@ -246,23 +254,31 @@ def api_update_atencion(id_hospital, id_atencion):
     """API para actualizar una atención médica"""
     try:
         data = request.get_json()
-        
-        result = atencion_medica_model.update_atencion(id_hospital, id_atencion, data)
-        
+        print(f"🔧 DEBUG API: Actualizando atención H={id_hospital}, A={id_atencion}, Datos: {data}")
+        required_fields = ['ID_Personal', 'ID_Paciente', 'ID_Tipo', 'Fecha', 'Diagnostico', 'Descripción', 'Tratamiento']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f'Campo requerido faltante: {field}'
+                })
+        result = atencion_medica_model.update_atencion_medica(id_hospital, id_atencion, data)
+        print(f"🔧 DEBUG API: Resultado actualización: {result}")
         return jsonify(result)
-            
     except Exception as e:
+        print(f"❌ ERROR API actualizar atención médica: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/atenciones/<int:id_hospital>/<int:id_atencion>', methods=['DELETE'])
 def api_delete_atencion(id_hospital, id_atencion):
     """API para eliminar una atención médica"""
     try:
-        result = atencion_medica_model.delete_atencion(id_hospital, id_atencion)
-        
+        print(f"🗑️ DEBUG API: Eliminando atención H={id_hospital}, A={id_atencion}")
+        result = atencion_medica_model.delete_atencion_medica(id_hospital, id_atencion)
+        print(f"🗑️ DEBUG API: Resultado eliminación: {result}")
         return jsonify(result)
-            
     except Exception as e:
+        print(f"❌ ERROR API eliminar atención médica: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/atenciones/search')

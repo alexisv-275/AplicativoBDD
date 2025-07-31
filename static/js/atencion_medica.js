@@ -27,6 +27,12 @@ class AtencionMedicaManager {
             btnActualizar.addEventListener('click', () => this.loadAtenciones());
         }
 
+        // Botón agregar atención médica
+        const btnAdd = document.getElementById('btnAddAtencion');
+        if (btnAdd) {
+            btnAdd.addEventListener('click', () => this.showAddAtencionModal());
+        }
+
         // Buscador
         const searchInput = document.querySelector('input[placeholder*="Buscar"]');
         if (searchInput) {
@@ -302,33 +308,212 @@ class AtencionMedicaManager {
         return div.innerHTML;
     }
 
-    // Métodos para CRUD (placeholder por ahora)
-    editAtencion(idHospital, idAtencion) {
-        // TODO: Implementar edición
-        alert(`Editar atención médica ${idHospital}-${idAtencion}`);
+    // Modal de edición/creación (patrón Pacientes)
+    showAtencionModal(editing = false, atencion = null) {
+        // Remover modal anterior si existe
+        const existingModal = document.getElementById('atencionEditModal');
+        if (existingModal) existingModal.remove();
+
+        // IDs únicos para campos
+        const idPersonal = editing && atencion ? atencion.ID_Personal : '';
+        const idPaciente = editing && atencion ? atencion.ID_Paciente : '';
+        const idTipo = editing && atencion ? atencion.ID_Tipo : '';
+        const fecha = editing && atencion ? (atencion.Fecha ? (atencion.Fecha.split('/').reverse().join('-')) : '') : '';
+        const diagnostico = editing && atencion ? atencion.Diagnostico : '';
+        const descripcion = editing && atencion ? atencion['Descripción'] : '';
+        const tratamiento = editing && atencion ? atencion.Tratamiento : '';
+
+        const modalHtml = `
+            <div class="modal fade" id="atencionEditModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${editing ? 'Editar Atención Médica' : 'Nueva Atención Médica'}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="atencionForm">
+                                <div class="mb-2">
+                                    <label for="edit_id_personal" class="form-label">ID Personal</label>
+                                    <input type="number" class="form-control" id="edit_id_personal" value="${idPersonal}" ${editing ? 'readonly' : ''} required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_id_paciente" class="form-label">ID Paciente</label>
+                                    <input type="number" class="form-control" id="edit_id_paciente" value="${idPaciente}" ${editing ? 'readonly' : ''} required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_id_tipo" class="form-label">ID Tipo</label>
+                                    <input type="number" class="form-control" id="edit_id_tipo" value="${idTipo}" ${editing ? 'readonly' : ''} required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_fecha" class="form-label">Fecha</label>
+                                    <input type="date" class="form-control" id="edit_fecha" value="${fecha}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_diagnostico" class="form-label">Diagnóstico</label>
+                                    <input type="text" class="form-control" id="edit_diagnostico" value="${diagnostico || ''}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_descripcion" class="form-label">Descripción</label>
+                                    <input type="text" class="form-control" id="edit_descripcion" value="${descripcion || ''}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="edit_tratamiento" class="form-label">Tratamiento</label>
+                                    <input type="text" class="form-control" id="edit_tratamiento" value="${tratamiento || ''}" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnSaveAtencion">
+                                <i class="bi bi-save"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('atencionEditModal'));
+        modal.show();
+        document.getElementById('btnSaveAtencion').onclick = () => this.saveAtencion(editing, atencion);
     }
 
-    async deleteAtencion(idHospital, idAtencion) {
-        if (!confirm('¿Está seguro que desea eliminar esta atención médica?')) {
+    editAtencion(idHospital, idAtencion) {
+        // Buscar la atención en la lista actual
+        const atencion = this.atenciones.find(a => a.ID_Hospital === idHospital && a['ID_Atención'] === idAtencion);
+        if (!atencion) {
+            this.showError('No se encontró la atención médica');
             return;
         }
+        this.showAtencionModal(true, atencion);
+    }
 
-        try {
-            const response = await fetch(`/api/atenciones/${idHospital}/${idAtencion}`, {
-                method: 'DELETE'
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showSuccess('Atención médica eliminada exitosamente');
-                this.loadAtenciones(); // Recargar tabla
-            } else {
-                this.showError('Error al eliminar: ' + data.error);
-            }
-        } catch (error) {
-            this.showError('Error de conexión: ' + error.message);
+    showAddAtencionModal() {
+        this.showAtencionModal(false, null);
+    }
+
+    saveAtencion(editing, atencion) {
+        // Obtener valores del formulario
+        const idPersonal = document.getElementById('edit_id_personal').value;
+        const idPaciente = document.getElementById('edit_id_paciente').value;
+        const idTipo = document.getElementById('edit_id_tipo').value;
+        const fecha = document.getElementById('edit_fecha').value;
+        const diagnostico = document.getElementById('edit_diagnostico').value;
+        const descripcion = document.getElementById('edit_descripcion').value;
+        const tratamiento = document.getElementById('edit_tratamiento').value;
+        if (!idPersonal || !idPaciente || !idTipo || !fecha || !diagnostico || !descripcion || !tratamiento) {
+            this.showError('Por favor complete todos los campos obligatorios');
+            return;
         }
+        const atencionData = {
+            ID_Personal: parseInt(idPersonal),
+            ID_Paciente: parseInt(idPaciente),
+            ID_Tipo: parseInt(idTipo),
+            Fecha: fecha,
+            Diagnostico: diagnostico,
+            'Descripción': descripcion,
+            Tratamiento: tratamiento
+        };
+        let url, method;
+        if (editing && atencion) {
+            url = `/api/atenciones/${atencion.ID_Hospital}/${atencion['ID_Atención']}`;
+            method = 'PUT';
+        } else {
+            url = '/api/atenciones/add';
+            method = 'POST';
+        }
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(atencionData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showSuccess(data.message || 'Atención médica guardada exitosamente');
+                this.loadAtenciones();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('atencionEditModal'));
+                modal.hide();
+            } else {
+                this.showError('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            this.showError('Error de conexión al guardar atención: ' + error);
+        });
+    }
+
+    // Modal de eliminación estandarizado
+    async deleteAtencion(idHospital, idAtencion) {
+        // Modal de confirmación siguiendo el patrón Pacientes/Contratos
+        const confirmModal = `
+            <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                Confirmar Eliminación
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Está seguro de eliminar esta atención médica?</p>
+                            <div class="alert alert-light">
+                                <strong>Hospital ID: ${idHospital} | Atención ID: ${idAtencion}</strong><br>
+                            </div>
+                            <p class="text-danger">
+                                <i class="bi bi-exclamation-circle"></i>
+                                <strong>Esta acción no se puede deshacer.</strong>
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-danger" id="btnConfirmDeleteAtencion">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        // Remover modal anterior si existe y agregar nuevo
+        const existingModal = document.getElementById('deleteConfirmModal');
+        if (existingModal) existingModal.remove();
+        document.body.insertAdjacentHTML('beforeend', confirmModal);
+        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        modal.show();
+        document.getElementById('btnConfirmDeleteAtencion').onclick = () => this.confirmDeleteAtencion(idHospital, idAtencion);
+    }
+
+    confirmDeleteAtencion(idHospital, idAtencion) {
+        // Cerrar modal de confirmación
+        const modalElement = document.getElementById('deleteConfirmModal');
+        if (modalElement) {
+            bootstrap.Modal.getInstance(modalElement).hide();
+        }
+        fetch(`/api/atenciones/${idHospital}/${idAtencion}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showSuccess(data.message || 'Atención médica eliminada exitosamente');
+                this.loadAtenciones();
+            } else {
+                this.showError('Error al eliminar atención médica: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            this.showError('Error de conexión al eliminar atención médica: ' + error);
+        });
     }
 }
 
