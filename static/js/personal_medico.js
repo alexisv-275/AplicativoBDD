@@ -419,23 +419,38 @@ function deletePersonalMedico(idHospital, idPersonal) {
     
     console.log('🗑️ DEBUG DELETE - Iniciando eliminación:', { idHospital, idPersonal, personal });
     
-    // Crear modal de confirmación Bootstrap
+    // Modal de confirmación siguiendo el patrón de Pacientes/Contratos
     const confirmModal = `
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle text-warning"></i>
+                            Confirmar Eliminación
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro de eliminar al personal médico?</p>
-                        <p><strong>${personal.Nombre} ${personal.Apellido}</strong></p>
-                        <p class="text-muted">Esta acción no se puede deshacer.</p>
+                        <div class="alert alert-light">
+                            <strong>${personal.Nombre || 'N/A'} ${personal.Apellido || 'N/A'}</strong><br>
+                            <small class="text-muted">
+                                Hospital: ${personal.ID_Hospital} | ID Personal: ${personal.ID_Personal}
+                            </small>
+                        </div>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <strong>Esta acción no se puede deshacer.</strong>
+                        </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-danger" onclick="confirmDeletePersonalMedico(${idHospital}, ${idPersonal})">Eliminar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="confirmDeletePersonalMedico(${idHospital}, ${idPersonal})">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
                     </div>
                 </div>
             </div>

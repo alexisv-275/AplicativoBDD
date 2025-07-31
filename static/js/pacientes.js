@@ -444,8 +444,74 @@ class PacientesManager {
     }
 
     async deletePaciente(idHospital, idPaciente) {
-        if (!confirm('¿Está seguro que desea eliminar este paciente?')) {
+        // Buscar el paciente en los datos para mostrar la información
+        const paciente = this.filteredPacientes.find(p => 
+            p.ID_Hospital === idHospital && p.ID_Paciente === idPaciente
+        );
+        
+        if (!paciente) {
+            this.showError('Paciente no encontrado');
             return;
+        }
+        
+        console.log('🗑️ DEBUG DELETE - Iniciando eliminación:', { idHospital, idPaciente, paciente });
+        
+        // Crear modal de confirmación Bootstrap (siguiendo patrón de Personal Médico)
+        const confirmModal = `
+            <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                Confirmar Eliminación
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Está seguro de eliminar al paciente?</p>
+                            <div class="alert alert-light">
+                                <strong>${this.escapeHtml(paciente.Nombre || 'N/A')} ${this.escapeHtml(paciente.Apellido || 'N/A')}</strong><br>
+                                <small class="text-muted">
+                                    Hospital: ${paciente.ID_Hospital} | ID Paciente: ${paciente.ID_Paciente}
+                                </small>
+                            </div>
+                            <p class="text-danger">
+                                <i class="bi bi-exclamation-circle"></i>
+                                <strong>Esta acción no se puede deshacer.</strong>
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="pacientesManager.confirmDeletePaciente(${idHospital}, ${idPaciente})">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe y agregar nuevo
+        const existingModal = document.getElementById('deleteConfirmModal');
+        if (existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', confirmModal);
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        modal.show();
+    }
+
+    async confirmDeletePaciente(idHospital, idPaciente) {
+        console.log('🗑️ DEBUG DELETE - Confirmación recibida:', { idHospital, idPaciente });
+        
+        // Cerrar modal de confirmación
+        const modalElement = document.getElementById('deleteConfirmModal');
+        if (modalElement) {
+            bootstrap.Modal.getInstance(modalElement).hide();
         }
 
         try {
@@ -453,7 +519,9 @@ class PacientesManager {
                 method: 'DELETE'
             });
             
+            console.log('🗑️ DEBUG DELETE - Response status:', response.status);
             const data = await response.json();
+            console.log('🗑️ DEBUG DELETE - Response data:', data);
             
             if (data.success) {
                 this.showSuccess('Paciente eliminado exitosamente');
@@ -462,6 +530,7 @@ class PacientesManager {
                 this.showError('Error al eliminar: ' + data.error);
             }
         } catch (error) {
+            console.error('💥 Error en DELETE:', error);
             this.showError('Error de conexión: ' + error.message);
         }
     }
