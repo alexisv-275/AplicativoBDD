@@ -1,8 +1,39 @@
 # Sistema Hospitalario Distribuido 🏥
 
-Aplicación Flask para gestión de pacientes con base de datos distribuida entre Quito y Guayaquil.
+Aplicación Flask para gestión hospitalaria con base de datos distribuida entre Quito y Guayaquil.
 
-## 🚀 Configuración del Entorno (OBLIGATORIO)
+## 🚀 SETUP RÁPIDO NODO 2 (GUAYAQUIL)
+
+### ⚡ Instalación Rápida:
+
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/alexisv-275/AplicativoBDD.git
+cd AplicativoBDD
+
+# 2. Crear entorno virtual
+python -m venv venv
+venv\Scripts\activate
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar base de datos
+copy .env.nodo2.template .env
+# ⚠️ EDITAR .env con tus datos de SQL Server
+
+# 5. Verificar configuración
+python verify_nodo2.py
+
+# 6. Ejecutar aplicación
+python app.py
+```
+
+**URL:** http://localhost:5000
+
+---
+
+## 🚀 Configuración del Entorno (DETALLADA)
 
 ### Para Windows:
 
