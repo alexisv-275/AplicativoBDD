@@ -233,18 +233,7 @@ class PacientesManager {
     }
 
     showError(message) {
-        const tbody = document.querySelector('tbody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="10" class="text-center text-danger py-4">
-                        <i class="bi bi-exclamation-triangle"></i> ${this.escapeHtml(message)}
-                    </td>
-                </tr>
-            `;
-        }
-        
-        // También mostrar toast/alert si está disponible
+        // Solo mostrar toast/alert, NO modificar la tabla
         this.showToast(message, 'error');
     }
 

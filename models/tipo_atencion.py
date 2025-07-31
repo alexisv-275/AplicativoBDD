@@ -219,7 +219,7 @@ class TipoAtencionModel(DatabaseConnection):
             else:
                 return {
                     'success': False,
-                    'error': 'No se pudo eliminar el tipo de atención (puede que no exista)'
+                    'error': 'No se pudo eliminar el tipo de atención'
                 }
                 
         except Exception as e:

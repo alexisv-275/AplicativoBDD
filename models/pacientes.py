@@ -292,23 +292,30 @@ class PacientesModel(DatabaseConnection):
             
             print(f"🗑️ DEBUG: Eliminando paciente Hospital={id_hospital}, ID={id_paciente}")
             
-            cursor.execute("{CALL SP_Delete_Paciente (?, ?)}", 
-                         (id_hospital, id_paciente))
-            
+            cursor.execute("{CALL SP_Delete_Paciente (?, ?)}", (id_hospital, id_paciente))
+            # Forzar la propagación de errores de SQL Server
+            while cursor.nextset():
+                pass
             connection.commit()
             cursor.close()
             connection.close()
-            
             return {
                 'success': True,
                 'message': 'Paciente eliminado exitosamente'
             }
                 
         except Exception as e:
-            print(f"Error en SP_Delete_Paciente: {e}")
+            import traceback
+            print("========== EXCEPCIÓN EN SP_Delete_Paciente ==========")
+            print(f"Tipo: {type(e)}")
+            print(f"Contenido: {e}")
+            print("Traceback:")
+            traceback.print_exc()
+            print("=====================================================")
+            # Mensaje genérico para el usuario, error real solo en terminal
             return {
                 'success': False,
-                'error': f'Error al eliminar paciente: {str(e)}'
+                'error': 'No se pudo eliminar el paciente. Puede que esté siendo referenciado en otra tabla.'
             }
     
     def search_pacientes(self, search_term, node=None):
