@@ -167,10 +167,10 @@ class PacientesManager {
                     <td class="text-center"><strong>${paciente.ID_Paciente}</strong></td>
                     <td>${this.escapeHtml(paciente.Nombre || 'N/A')}</td>
                     <td>${this.escapeHtml(paciente.Apellido || 'N/A')}</td>
-                    <td>${this.escapeHtml(paciente.Dirección || 'Sin dirección')}</td>
+                    <td>${this.escapeHtml(paciente.Direccion || 'Sin dirección')}</td>
                     <td class="text-center">${paciente.FechaNacimiento || 'N/A'}</td>
                     <td class="text-center">${paciente.Sexo || 'N/A'}</td>
-                    <td>${this.escapeHtml(paciente.Teléfono || 'Sin teléfono')}</td>
+                    <td>${this.escapeHtml(paciente.Telefono || 'Sin teléfono')}</td>
                     <td class="text-center">
                         <span class="badge bg-${nodeColor}">${nodeName}</span>
                     </td>
@@ -296,10 +296,151 @@ class PacientesManager {
         return div.innerHTML;
     }
 
-    // Métodos para CRUD (placeholder por ahora)
-    editPaciente(idHospital, idPaciente) {
-        // TODO: Implementar edición
-        alert(`Editar paciente ${idHospital}-${idPaciente}`);
+    // Métodos para CRUD - Siguiendo el patrón de Personal Médico
+    
+    openAddModal() {
+        // Limpiar formulario
+        document.getElementById('paciente_form').reset();
+        document.getElementById('paciente_id_hospital').value = '';
+        document.getElementById('paciente_id_paciente').value = '';
+        
+        // Configurar modal para agregar
+        document.getElementById('pacienteModalLabel').textContent = 'Agregar Nuevo Paciente';
+        document.getElementById('btn_save_paciente').textContent = 'Guardar Paciente';
+        document.getElementById('btn_save_paciente').setAttribute('onclick', 'pacientesManager.addPaciente()');
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('pacienteModal'));
+        modal.show();
+    }
+
+    async addPaciente() {
+        try {
+            const formData = {
+                'Nombre': document.getElementById('paciente_nombre').value.trim(),
+                'Apellido': document.getElementById('paciente_apellido').value.trim(), 
+                'Direccion': document.getElementById('paciente_direccion').value.trim(),
+                'FechaNacimiento': document.getElementById('paciente_fecha_nacimiento').value,
+                'Sexo': document.getElementById('paciente_sexo').value,
+                'Telefono': document.getElementById('paciente_telefono').value.trim()
+            };
+
+            // Validaciones básicas
+            if (!formData.Nombre || !formData.Apellido || !formData.FechaNacimiento || !formData.Sexo) {
+                this.showError('Por favor complete todos los campos obligatorios');
+                return;
+            }
+
+            console.log('🔍 DEBUG: Enviando datos para crear paciente:', formData);
+
+            const response = await fetch('/api/pacientes/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            console.log('🔍 DEBUG: Respuesta del servidor:', data);
+
+            if (data.success) {
+                this.showSuccess(data.message || 'Paciente creado exitosamente');
+                bootstrap.Modal.getInstance(document.getElementById('pacienteModal')).hide();
+                this.loadPacientes(); // Recargar la tabla
+            } else {
+                this.showError('Error al crear paciente: ' + data.error);
+            }
+
+        } catch (error) {
+            console.error('Error al agregar paciente:', error);
+            this.showError('Error de conexión: ' + error.message);
+        }
+    }
+
+    async editPaciente(idHospital, idPaciente) {
+        try {
+            // Primero obtener los datos del paciente
+            const response = await fetch(`/api/pacientes/${idHospital}/${idPaciente}`);
+            const data = await response.json();
+
+            if (data.success && data.paciente) {
+                const paciente = data.paciente;
+                
+                // Llenar el formulario con los datos existentes
+                document.getElementById('paciente_id_hospital').value = paciente.ID_Hospital;
+                document.getElementById('paciente_id_paciente').value = paciente.ID_Paciente;
+                document.getElementById('paciente_nombre').value = paciente.Nombre || '';
+                document.getElementById('paciente_apellido').value = paciente.Apellido || '';
+                document.getElementById('paciente_direccion').value = paciente.Direccion || '';
+                document.getElementById('paciente_fecha_nacimiento').value = paciente.FechaNacimiento || '';
+                document.getElementById('paciente_sexo').value = paciente.Sexo || '';
+                document.getElementById('paciente_telefono').value = paciente.Telefono || '';
+
+                // Configurar modal para editar
+                document.getElementById('pacienteModalLabel').textContent = 'Editar Paciente';
+                document.getElementById('btn_save_paciente').textContent = 'Actualizar Paciente';
+                document.getElementById('btn_save_paciente').setAttribute('onclick', 'pacientesManager.updatePaciente()');
+
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('pacienteModal'));
+                modal.show();
+
+            } else {
+                this.showError('Error al cargar datos del paciente: ' + (data.error || 'Paciente no encontrado'));
+            }
+
+        } catch (error) {
+            console.error('Error al editar paciente:', error);
+            this.showError('Error de conexión: ' + error.message);
+        }
+    }
+
+    async updatePaciente() {
+        try {
+            const idHospital = document.getElementById('paciente_id_hospital').value;
+            const idPaciente = document.getElementById('paciente_id_paciente').value;
+            
+            const formData = {
+                'Nombre': document.getElementById('paciente_nombre').value.trim(),
+                'Apellido': document.getElementById('paciente_apellido').value.trim(),
+                'Direccion': document.getElementById('paciente_direccion').value.trim(),
+                'FechaNacimiento': document.getElementById('paciente_fecha_nacimiento').value,
+                'Sexo': document.getElementById('paciente_sexo').value,
+                'Telefono': document.getElementById('paciente_telefono').value.trim()
+            };
+
+            // Validaciones básicas
+            if (!formData.Nombre || !formData.Apellido || !formData.FechaNacimiento || !formData.Sexo) {
+                this.showError('Por favor complete todos los campos obligatorios');
+                return;
+            }
+
+            console.log('🔧 DEBUG: Actualizando paciente:', formData);
+
+            const response = await fetch(`/api/pacientes/${idHospital}/${idPaciente}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            console.log('🔧 DEBUG: Respuesta actualización:', data);
+
+            if (data.success) {
+                this.showSuccess(data.message || 'Paciente actualizado exitosamente');
+                bootstrap.Modal.getInstance(document.getElementById('pacienteModal')).hide();
+                this.loadPacientes(); // Recargar la tabla
+            } else {
+                this.showError('Error al actualizar paciente: ' + data.error);
+            }
+
+        } catch (error) {
+            console.error('Error al actualizar paciente:', error);
+            this.showError('Error de conexión: ' + error.message);
+        }
     }
 
     async deletePaciente(idHospital, idPaciente) {

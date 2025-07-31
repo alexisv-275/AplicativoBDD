@@ -1,13 +1,60 @@
 from .base import DatabaseConnection
 
 class PacientesModel(DatabaseConnection):
-    """Modelo para manejar operaciones con Vista_Paciente"""
+    """Modelo para manejar operaciones con Vista_Paciente (particionada actualizable)"""
     
     def __init__(self):
         super().__init__()
+        # Configuración de rangos de ID por nodo
+        self.ID_RANGES = {
+            'quito': {'min': 1, 'max': 20},
+            'guayaquil': {'min': 21, 'max': 40}
+        }
+    
+    def get_next_available_id(self, node=None):
+        """Obtiene el siguiente ID disponible según el rango del nodo"""
+        try:
+            current_node = node or self.detect_current_node()
+            if not current_node or current_node not in self.ID_RANGES:
+                return None
+            
+            range_config = self.ID_RANGES[current_node]
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            # Buscar IDs ocupados en el rango
+            query = """
+                SELECT ID_Paciente 
+                FROM Vista_Paciente 
+                WHERE ID_Hospital = ? AND ID_Paciente BETWEEN ? AND ?
+                ORDER BY ID_Paciente
+            """
+            
+            params = (hospital_id, range_config['min'], range_config['max'])
+            results = self.execute_query(query, params, node=current_node)
+            
+            if results is None:
+                return range_config['min']  # Si hay error, usar el mínimo
+            
+            # Encontrar el primer ID disponible
+            occupied_ids = {row['ID_Paciente'] for row in results}
+            
+            for id_candidate in range(range_config['min'], range_config['max'] + 1):
+                if id_candidate not in occupied_ids:
+                    return id_candidate
+            
+            return None  # Rango completo
+            
+        except Exception as e:
+            print(f"Error obteniendo siguiente ID paciente: {e}")
+            return None
+    
+    def get_hospital_id_by_node(self, node=None):
+        """Obtiene el ID del hospital según el nodo"""
+        current_node = node or self.detect_current_node()
+        return 1 if current_node == 'quito' else 2
     
     def get_all_pacientes(self, node=None):
-        """Obtiene todos los pacientes desde Vista_Paciente"""
+        """Obtiene todos los pacientes desde Vista_Paciente (solo del hospital local)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -19,13 +66,22 @@ class PacientesModel(DatabaseConnection):
                     'total': 0
                 }
             
-            query = "SELECT * FROM Vista_Paciente ORDER BY ID_Hospital, ID_Paciente"
-            results = self.execute_query(query, node=current_node)
+            # 🏥 FILTRO LOCAL: Solo mostrar pacientes del hospital local
+            hospital_id = self.get_hospital_id_by_node(current_node)
+            
+            query = """
+                SELECT ID_Hospital, ID_Paciente, Nombre, Apellido, Dirección, 
+                       FechaNacimiento, Sexo, Teléfono 
+                FROM Vista_Paciente 
+                WHERE ID_Hospital = ?
+                ORDER BY ID_Paciente
+            """
+            
+            results = self.execute_query(query, (hospital_id,), node=current_node)
 
-            #DEBUGEAR
+            # Debug
             if results and len(results) > 0:
-                print(f"Campos disponibles en Vista Paciente: {list(results[0].keys())}")
-                print(f"Primer registro: {results[0]}")
+                print(f"🔍 DEBUG Pacientes: {len(results)} registros del hospital {hospital_id} en nodo {current_node}")
 
             if results is None:
                 return {
@@ -36,8 +92,15 @@ class PacientesModel(DatabaseConnection):
                     'total': 0
                 }
             
-            # Formatear fechas para el frontend
+            # Formatear fechas y mapear campos con tilde
             for paciente in results:
+                # Mapear campos con tilde a nombres sin tilde para frontend
+                if 'Dirección' in paciente:
+                    paciente['Direccion'] = paciente['Dirección']
+                if 'Teléfono' in paciente:
+                    paciente['Telefono'] = paciente['Teléfono']
+                    
+                # Formatear fecha
                 if paciente.get('FechaNacimiento'):
                     fecha = paciente['FechaNacimiento']
                     if hasattr(fecha, 'strftime'):
@@ -68,19 +131,36 @@ class PacientesModel(DatabaseConnection):
                 return None
             
             query = """
-                SELECT * FROM Vista_Paciente 
+                SELECT ID_Hospital, ID_Paciente, Nombre, Apellido, Dirección, 
+                       FechaNacimiento, Sexo, Teléfono 
+                FROM Vista_Paciente 
                 WHERE ID_Hospital = ? AND ID_Paciente = ?
             """
             results = self.execute_query(query, (id_hospital, id_paciente), node=current_node)
             
             if results and len(results) > 0:
                 paciente = results[0]
+                # Mapear campos con tilde y formatear fecha
+                resultado = {
+                    'ID_Hospital': paciente.get('ID_Hospital'),
+                    'ID_Paciente': paciente.get('ID_Paciente'),
+                    'Nombre': paciente.get('Nombre'),
+                    'Apellido': paciente.get('Apellido'),
+                    'Direccion': paciente.get('Dirección'),  # Mapear desde BD con tilde
+                    'Telefono': paciente.get('Teléfono'),    # Mapear desde BD con tilde
+                    'Sexo': paciente.get('Sexo'),
+                    'FechaNacimiento': None
+                }
+                
                 # Formatear fecha
                 if paciente.get('FechaNacimiento'):
                     fecha = paciente['FechaNacimiento']
                     if hasattr(fecha, 'strftime'):
-                        paciente['FechaNacimiento'] = fecha.strftime('%d/%m/%Y')
-                return paciente
+                        resultado['FechaNacimiento'] = fecha.strftime('%Y-%m-%d')
+                    else:
+                        resultado['FechaNacimiento'] = str(fecha)
+                
+                return resultado
             
             return None
             
@@ -89,7 +169,7 @@ class PacientesModel(DatabaseConnection):
             return None
     
     def create_paciente(self, paciente_data, node=None):
-        """Crea un nuevo paciente en Vista_Paciente"""
+        """Crea un nuevo paciente con auto-asignación de ID según rango del nodo"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -98,45 +178,56 @@ class PacientesModel(DatabaseConnection):
                     'error': 'No se puede conectar a ningún nodo'
                 }
             
-            # La vista debe manejar la inserción automáticamente según las restricciones
-            query = """
-                INSERT INTO Vista_Paciente 
-                (ID_Hospital, ID_Paciente, Nombre, Apellido, Direccion, FechaNacimiento, Sexo, Telefono)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """
-            
-            params = (
-                paciente_data['ID_Hospital'],
-                paciente_data['ID_Paciente'],
-                paciente_data['Nombre'],
-                paciente_data['Apellido'],
-                paciente_data['Direccion'],
-                paciente_data['FechaNacimiento'],
-                paciente_data['Sexo'],
-                paciente_data['Telefono']
-            )
-            
-            result = self.execute_query(query, params, node=current_node)
-            
-            if result is not None and result > 0:
-                return {
-                    'success': True,
-                    'message': f'Paciente creado exitosamente en nodo {current_node}'
-                }
-            else:
+            # Auto-asignar ID_Paciente según el rango del nodo
+            next_id = self.get_next_available_id(current_node)
+            if next_id is None:
+                range_config = self.ID_RANGES.get(current_node, {})
                 return {
                     'success': False,
-                    'error': 'No se pudo insertar el paciente'
+                    'error': f'No hay IDs disponibles en el rango {range_config.get("min", "?")} - {range_config.get("max", "?")} para el nodo {current_node}'
+                }
+            
+            # Auto-asignar ID_Hospital según el nodo
+            hospital_id = 1 if current_node == 'quito' else 2
+            
+            # Usar stored procedure con transacción distribuida
+            connection = self.get_connection()
+            if not connection:
+                return {
+                    'success': False,
+                    'error': 'No se pudo establecer conexión'
                 }
                 
+            cursor = connection.cursor()
+            
+            print(f"🔍 DEBUG: Creando paciente ID={next_id}, Hospital={hospital_id}, Nodo={current_node}")
+            
+            cursor.execute("{CALL SP_Create_Paciente (?, ?, ?, ?, ?, ?, ?, ?)}", 
+                         (hospital_id, next_id, paciente_data['Nombre'],
+                          paciente_data['Apellido'], paciente_data['Direccion'],
+                          paciente_data['FechaNacimiento'], paciente_data['Sexo'],
+                          paciente_data['Telefono']))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return {
+                'success': True,
+                'message': f'Paciente creado exitosamente en nodo {current_node}',
+                'id_paciente': next_id,
+                'id_hospital': hospital_id
+            }
+                
         except Exception as e:
+            print(f"Error en SP_Create_Paciente: {e}")
             return {
                 'success': False,
                 'error': f'Error al crear paciente: {str(e)}'
             }
     
     def update_paciente(self, id_hospital, id_paciente, paciente_data, node=None):
-        """Actualiza un paciente existente en Vista_Paciente"""
+        """Actualiza un paciente usando SP_Update_Paciente"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -145,45 +236,42 @@ class PacientesModel(DatabaseConnection):
                     'error': 'No se puede conectar a ningún nodo'
                 }
             
-            query = """
-                UPDATE Vista_Paciente 
-                SET Nombre = ?, Apellido = ?, Direccion = ?, 
-                    FechaNacimiento = ?, Sexo = ?, Telefono = ?
-                WHERE ID_Hospital = ? AND ID_Paciente = ?
-            """
-            
-            params = (
-                paciente_data['Nombre'],
-                paciente_data['Apellido'],
-                paciente_data['Direccion'],
-                paciente_data['FechaNacimiento'],
-                paciente_data['Sexo'],
-                paciente_data['Telefono'],
-                id_hospital,
-                id_paciente
-            )
-            
-            result = self.execute_query(query, params, node=current_node)
-            
-            if result is not None and result > 0:
-                return {
-                    'success': True,
-                    'message': f'Paciente actualizado exitosamente en nodo {current_node}'
-                }
-            else:
+            # Usar stored procedure con transacción distribuida
+            connection = self.get_connection()
+            if not connection:
                 return {
                     'success': False,
-                    'error': 'No se pudo actualizar el paciente (puede que no exista)'
+                    'error': 'No se pudo establecer conexión'
                 }
                 
+            cursor = connection.cursor()
+            
+            print(f"🔧 DEBUG: Actualizando paciente Hospital={id_hospital}, ID={id_paciente}")
+            
+            cursor.execute("{CALL SP_Update_Paciente (?, ?, ?, ?, ?, ?, ?, ?)}", 
+                         (id_hospital, id_paciente, paciente_data['Nombre'],
+                          paciente_data['Apellido'], paciente_data['Direccion'],
+                          paciente_data['FechaNacimiento'], paciente_data['Sexo'],
+                          paciente_data['Telefono']))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return {
+                'success': True,
+                'message': 'Paciente actualizado exitosamente'
+            }
+                
         except Exception as e:
+            print(f"Error en SP_Update_Paciente: {e}")
             return {
                 'success': False,
                 'error': f'Error al actualizar paciente: {str(e)}'
             }
     
     def delete_paciente(self, id_hospital, id_paciente, node=None):
-        """Elimina un paciente de Vista_Paciente"""
+        """Elimina un paciente usando SP_Delete_Paciente"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -192,32 +280,39 @@ class PacientesModel(DatabaseConnection):
                     'error': 'No se puede conectar a ningún nodo'
                 }
             
-            query = """
-                DELETE FROM Vista_Paciente 
-                WHERE ID_Hospital = ? AND ID_Paciente = ?
-            """
-            
-            result = self.execute_query(query, (id_hospital, id_paciente), node=current_node)
-            
-            if result is not None and result > 0:
-                return {
-                    'success': True,
-                    'message': f'Paciente eliminado exitosamente del nodo {current_node}'
-                }
-            else:
+            # Usar stored procedure con transacción distribuida
+            connection = self.get_connection()
+            if not connection:
                 return {
                     'success': False,
-                    'error': 'No se pudo eliminar el paciente (puede que no exista)'
+                    'error': 'No se pudo establecer conexión'
                 }
                 
+            cursor = connection.cursor()
+            
+            print(f"🗑️ DEBUG: Eliminando paciente Hospital={id_hospital}, ID={id_paciente}")
+            
+            cursor.execute("{CALL SP_Delete_Paciente (?, ?)}", 
+                         (id_hospital, id_paciente))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return {
+                'success': True,
+                'message': 'Paciente eliminado exitosamente'
+            }
+                
         except Exception as e:
+            print(f"Error en SP_Delete_Paciente: {e}")
             return {
                 'success': False,
                 'error': f'Error al eliminar paciente: {str(e)}'
             }
     
     def search_pacientes(self, search_term, node=None):
-        """Busca pacientes por nombre, apellido o ID"""
+        """Busca pacientes por nombre, apellido o ID (solo del hospital local como Experiencia)"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
@@ -227,15 +322,22 @@ class PacientesModel(DatabaseConnection):
                     'pacientes': []
                 }
             
+            # 🏥 FILTRO LOCAL: Solo mostrar pacientes del hospital local (como Experiencia)
+            hospital_id = self.get_hospital_id_by_node(current_node)
+            
             query = """
-                SELECT * FROM Vista_Paciente 
-                WHERE Nombre LIKE ? OR Apellido LIKE ? OR 
-                      CAST(ID_Paciente AS VARCHAR) LIKE ?
-                ORDER BY ID_Hospital, ID_Paciente
+                SELECT ID_Hospital, ID_Paciente, Nombre, Apellido, Dirección, 
+                       FechaNacimiento, Sexo, Teléfono 
+                FROM Vista_Paciente 
+                WHERE ID_Hospital = ? AND (
+                    Nombre LIKE ? OR Apellido LIKE ? OR 
+                    CAST(ID_Paciente AS VARCHAR) LIKE ?
+                )
+                ORDER BY ID_Paciente
             """
             
             search_pattern = f"%{search_term}%"
-            results = self.execute_query(query, (search_pattern, search_pattern, search_pattern), node=current_node)
+            results = self.execute_query(query, (hospital_id, search_pattern, search_pattern, search_pattern), node=current_node)
             
             if results is None:
                 return {
@@ -244,18 +346,27 @@ class PacientesModel(DatabaseConnection):
                     'pacientes': []
                 }
             
-            # Formatear fechas
-            for paciente in results:
-                if paciente.get('FechaNacimiento'):
-                    fecha = paciente['FechaNacimiento']
-                    if hasattr(fecha, 'strftime'):
-                        paciente['FechaNacimiento'] = fecha.strftime('%d/%m/%Y')
+            # Formatear fechas y mapear campos con tilde
+            if isinstance(results, list):
+                for paciente in results:
+                    # Mapear campos con tilde a nombres sin tilde para frontend
+                    if 'Dirección' in paciente:
+                        paciente['Direccion'] = paciente['Dirección']
+                    if 'Teléfono' in paciente:
+                        paciente['Telefono'] = paciente['Teléfono']
+                        
+                    # Formatear fecha
+                    if paciente.get('FechaNacimiento'):
+                        fecha = paciente['FechaNacimiento']
+                        if hasattr(fecha, 'strftime'):
+                            paciente['FechaNacimiento'] = fecha.strftime('%d/%m/%Y')
             
             return {
                 'success': True,
-                'pacientes': results,
+                'pacientes': results if isinstance(results, list) else [],
                 'node': current_node,
-                'total': len(results)
+                'hospital_id': hospital_id,
+                'total': len(results) if isinstance(results, list) else 0
             }
             
         except Exception as e:

@@ -20,7 +20,7 @@
             <button class="btn btn-primary" onclick="loadPacientes()">
                 <i class="bi bi-arrow-clockwise"></i> Actualizar Vista
             </button>
-            <button class="btn btn-success ms-2">
+            <button class="btn btn-success ms-2" onclick="pacientesManager.openAddModal()">
                 <i class="bi bi-plus-circle"></i> Nuevo Paciente
             </button>
         </div>
@@ -95,6 +95,97 @@
                     <strong id="info-registros">{{ pacientes|length if pacientes else 0 }} pacientes</strong> • 
                     <span class="text-success">Vista_Paciente activa</span>
                 </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar/Editar Paciente -->
+<div class="modal fade" id="pacienteModal" tabindex="-1" aria-labelledby="pacienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="pacienteModalLabel">
+                    <i class="bi bi-person-plus"></i> Agregar Nuevo Paciente
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paciente_form">
+                    <!-- Campos ocultos para ID en modo edición -->
+                    <input type="hidden" id="paciente_id_hospital" name="id_hospital">
+                    <input type="hidden" id="paciente_id_paciente" name="id_paciente">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="paciente_nombre" class="form-label">
+                                <i class="bi bi-person"></i> Nombre *
+                            </label>
+                            <input type="text" class="form-control" id="paciente_nombre" 
+                                   name="nombre" required maxlength="50">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="paciente_apellido" class="form-label">
+                                <i class="bi bi-person"></i> Apellido *
+                            </label>
+                            <input type="text" class="form-control" id="paciente_apellido" 
+                                   name="apellido" required maxlength="50">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="paciente_direccion" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Dirección
+                            </label>
+                            <input type="text" class="form-control" id="paciente_direccion" 
+                                   name="direccion" maxlength="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="paciente_telefono" class="form-label">
+                                <i class="bi bi-telephone"></i> Teléfono
+                            </label>
+                            <input type="text" class="form-control" id="paciente_telefono" 
+                                   name="telefono" maxlength="20">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="paciente_fecha_nacimiento" class="form-label">
+                                <i class="bi bi-calendar"></i> Fecha de Nacimiento *
+                            </label>
+                            <input type="date" class="form-control" id="paciente_fecha_nacimiento" 
+                                   name="fecha_nacimiento" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="paciente_sexo" class="form-label">
+                                <i class="bi bi-person"></i> Sexo *
+                            </label>
+                            <select class="form-select" id="paciente_sexo" name="sexo" required>
+                                <option value="">Seleccionar sexo</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Información:</strong> El ID del paciente se asignará automáticamente según el hospital:
+                        <br>• Quito: IDs 1-20 | Guayaquil: IDs 21-40
+                        <br>• Solo se mostrarán pacientes del hospital local (filtro activo)
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btn_save_paciente" 
+                        onclick="pacientesManager.addPaciente()">
+                    <i class="bi bi-check-circle"></i> Guardar Paciente
+                </button>
             </div>
         </div>
     </div>

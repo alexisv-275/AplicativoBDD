@@ -76,95 +76,115 @@ def api_pacientes():
 
 @app.route('/api/pacientes/add', methods=['POST'])
 def api_add_paciente():
-    """API para agregar nuevo paciente"""
+    """API para agregar nuevo paciente con auto-asignación de ID"""
     try:
         data = request.get_json()
+        print(f"🔍 DEBUG API: Datos recibidos para crear paciente: {data}")
         
-        result = pacientes_model.create_paciente(
-            data['id_hospital'],
-            data['nombre'],
-            data['apellido'],
-            data['direccion'],
-            data['fecha_nacimiento'],
-            data['sexo'],
-            data['telefono']
-        )
+        # Validar datos requeridos
+        required_fields = ['Nombre', 'Apellido', 'Direccion', 'FechaNacimiento', 'Sexo', 'Telefono']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False, 
+                    'error': f'Campo requerido faltante: {field}'
+                })
         
-        if result:
-            return jsonify({'success': True, 'message': 'Paciente agregado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'No se pudo agregar el paciente'})
+        result = pacientes_model.create_paciente(data)
+        print(f"🔍 DEBUG API: Resultado creación paciente: {result}")
+        
+        return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API crear paciente: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/pacientes/<int:id_hospital>/<int:id_paciente>', methods=['PUT'])
 def api_update_paciente(id_hospital, id_paciente):
-    """API para actualizar un paciente"""
+    """API para actualizar un paciente usando stored procedure"""
     try:
         data = request.get_json()
+        print(f"🔧 DEBUG API: Actualizando paciente H={id_hospital}, P={id_paciente}, Datos: {data}")
         
-        result = pacientes_model.update_paciente(
-            id_hospital,
-            id_paciente,
-            data['nombre'],
-            data['apellido'],
-            data['direccion'],
-            data['fecha_nacimiento'],
-            data['sexo'],
-            data['telefono']
-        )
+        # Validar datos requeridos
+        required_fields = ['Nombre', 'Apellido', 'Direccion', 'FechaNacimiento', 'Sexo', 'Telefono']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False, 
+                    'error': f'Campo requerido faltante: {field}'
+                })
         
-        if result:
-            return jsonify({'success': True, 'message': 'Paciente actualizado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'No se pudo actualizar el paciente'})
+        result = pacientes_model.update_paciente(id_hospital, id_paciente, data)
+        print(f"🔧 DEBUG API: Resultado actualización: {result}")
+        
+        return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API actualizar paciente: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/pacientes/<int:id_hospital>/<int:id_paciente>', methods=['DELETE'])
 def api_delete_paciente(id_hospital, id_paciente):
-    """API para eliminar un paciente"""
+    """API para eliminar un paciente usando stored procedure"""
     try:
-        result = pacientes_model.delete_paciente(id_hospital, id_paciente)
+        print(f"🗑️ DEBUG API: Eliminando paciente H={id_hospital}, P={id_paciente}")
         
-        if result:
-            return jsonify({'success': True, 'message': 'Paciente eliminado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'No se pudo eliminar el paciente'})
+        result = pacientes_model.delete_paciente(id_hospital, id_paciente)
+        print(f"🗑️ DEBUG API: Resultado eliminación: {result}")
+        
+        return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API eliminar paciente: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/pacientes/search')
 def api_search_pacientes():
-    """API para buscar pacientes"""
+    """API para buscar pacientes (filtrado por hospital local)"""
     try:
         query = request.args.get('q', '')
         if not query:
             return jsonify({'success': False, 'error': 'Parámetro de búsqueda requerido'})
         
+        print(f"🔍 DEBUG API: Buscando pacientes con término: '{query}'")
         result = pacientes_model.search_pacientes(query)
+        print(f"🔍 DEBUG API: Resultado búsqueda: {result.get('total', 0)} pacientes encontrados")
         
-        if result['success']:
-            return jsonify({
-                'success': True,
-                'node': result['node'],
-                'pacientes': result['pacientes'],
-                'total': result['total']
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': result['error'],
-                'node': result['node']
-            })
+        return jsonify(result)
+            
     except Exception as e:
+        print(f"❌ ERROR API buscar pacientes: {e}")
         return jsonify({
             'success': False,
             'error': str(e),
             'node': 'unknown'
+        })
+
+@app.route('/api/pacientes/<int:id_hospital>/<int:id_paciente>', methods=['GET'])
+def api_get_paciente(id_hospital, id_paciente):
+    """API para obtener un paciente específico por ID"""
+    try:
+        print(f"🔍 DEBUG API: Obteniendo paciente H={id_hospital}, P={id_paciente}")
+        
+        paciente = pacientes_model.get_paciente_by_id(id_hospital, id_paciente)
+        
+        if paciente:
+            return jsonify({
+                'success': True,
+                'paciente': paciente
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Paciente no encontrado'
+            })
+            
+    except Exception as e:
+        print(f"❌ ERROR API obtener paciente: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
         })
 
 @app.route('/citas')
