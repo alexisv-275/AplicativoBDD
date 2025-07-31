@@ -483,11 +483,11 @@ function confirmDeletePersonalMedico(idHospital, idPersonal) {
     })
     .then(data => {
         console.log('🗑️ DEBUG DELETE - Response data:', data);
-        
         if (data.success) {
             showSuccess('Personal médico eliminado exitosamente');
             loadPersonalMedico(); // Recargar datos
         } else {
+            // Solo mostrar toast, NO modificar la tabla
             showError('Error al eliminar personal médico: ' + data.error);
         }
     })

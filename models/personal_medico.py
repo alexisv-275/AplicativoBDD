@@ -439,25 +439,33 @@ class PersonalMedicoModel(DatabaseConnection):
                     'success': False,
                     'error': 'No se pudo establecer conexión'
                 }
-                
+
             cursor = connection.cursor()
-            
+
             # Ejecutar SP de eliminación con transacción distribuida
-            cursor.execute("{CALL SP_Delete_PersonalMedico (?, ?)}", 
-                         (id_hospital, id_personal))
-            
+            cursor.execute("{CALL SP_Delete_PersonalMedico (?, ?)}", (id_hospital, id_personal))
+            # Forzar la propagación de errores de SQL Server
+            while cursor.nextset():
+                pass
             connection.commit()
             cursor.close()
             connection.close()
-            
+
             return {
                 'success': True,
                 'message': 'Personal médico eliminado exitosamente'
             }
-            
+
         except Exception as e:
-            print(f"Error en SP_Delete_PersonalMedico: {e}")
+            import traceback
+            print("========== EXCEPCIÓN EN SP_Delete_PersonalMedico ==========")
+            print(f"Tipo: {type(e)}")
+            print(f"Contenido: {e}")
+            print("Traceback:")
+            traceback.print_exc()
+            print("=====================================================")
+            # Mensaje genérico para el usuario, error real solo en terminal
             return {
                 'success': False,
-                'error': f'Error al eliminar personal médico: {str(e)}'
+                'error': 'No se pudo eliminar el personal médico. Puede que esté siendo referenciado en otra tabla.'
             }
