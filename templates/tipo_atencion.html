@@ -95,6 +95,32 @@
     </div>
 </div>
 
+<!-- Modal de confirmación de eliminación (se rellena dinámicamente) -->
+<div class="modal fade" id="deleteTipoAtencionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="deleteTipoAtencionModalBody">
+                <!-- Se rellena dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteTipoAtencionBtn">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Script específico para tipos de atención -->
 <script src="{{ url_for('static', filename='js/tipo_atencion.js') }}"></script>
 {% endblock %}

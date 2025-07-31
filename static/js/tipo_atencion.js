@@ -297,25 +297,59 @@ function updateTipoAtencion() {
 function deleteTipoAtencion(id) {
     const tipoAtencion = tiposAtencionData.find(t => t.ID_Tipo === id);
     if (!tipoAtencion) return;
-    
-    if (confirm(`¿Está seguro de eliminar el tipo de atención "${tipoAtencion.Tipo}"?`)) {
-        fetch(`/api/tipos-atencion/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess('Tipo de atención eliminado exitosamente');
-                loadTiposAtencion(); // Recargar datos
-            } else {
-                showError('Error al eliminar tipo de atención: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('Error de conexión al eliminar tipo de atención');
-        });
+
+    // Rellenar el contenido del modal
+    const modalBody = document.getElementById('deleteTipoAtencionModalBody');
+    if (modalBody) {
+        modalBody.innerHTML = `
+            <p>¿Está seguro de eliminar el tipo de atención?</p>
+            <div class="alert alert-light">
+                <strong>${tipoAtencion.Tipo || 'N/A'}</strong><br>
+                <small class="text-muted">ID Tipo: ${tipoAtencion.ID_Tipo}</small>
+            </div>
+            <p class="text-danger">
+                <i class="bi bi-exclamation-circle"></i>
+                <strong>Esta acción no se puede deshacer.</strong>
+            </p>
+        `;
     }
+
+    // Configurar el botón de confirmación
+    const confirmBtn = document.getElementById('confirmDeleteTipoAtencionBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            confirmDeleteTipoAtencion(id);
+        };
+    }
+
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteTipoAtencionModal'));
+    modal.show();
+}
+
+function confirmDeleteTipoAtencion(id) {
+    // Cerrar modal
+    const modalElement = document.getElementById('deleteTipoAtencionModal');
+    if (modalElement) {
+        bootstrap.Modal.getInstance(modalElement).hide();
+    }
+
+    fetch(`/api/tipos-atencion/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess('Tipo de atención eliminado exitosamente');
+            loadTiposAtencion(); // Recargar datos
+        } else {
+            showError('Error al eliminar tipo de atención: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error de conexión al eliminar tipo de atención');
+    });
 }
 
 function updateNodeIndicator(node) {
