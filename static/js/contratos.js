@@ -1,5 +1,8 @@
 // ==================== GESTIÓN DE CONTRATOS ====================
 
+// Variables globales para manejo de datos
+let contratosData = [];
+let filteredContratos = [];
 let currentEditingContrato = null;
 
 // Inicializar cuando el DOM esté listo
@@ -7,9 +10,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Deshabilitar funcionalidades de creación y eliminación para mantener consistencia
     disableCreateDeleteFunctionality();
     
+    // Configurar event listeners
+    setupEventListeners();
+    
     // Cargar contratos al inicio
     loadContratos();
 });
+
+// Configurar event listeners
+function setupEventListeners() {
+    // Buscador
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => applyFilters());
+    }
+    
+    // Filtro de hospital
+    const hospitalFilter = document.getElementById('filterHospital');
+    if (hospitalFilter) {
+        hospitalFilter.addEventListener('change', () => applyFilters());
+    }
+}
 
 // Deshabilitar creación y eliminación para mantener consistencia con Personal Médico
 function disableCreateDeleteFunctionality() {
@@ -39,7 +60,9 @@ function loadContratos() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                updateContratosTable(data.contratos);
+                contratosData = data.contratos || [];
+                filteredContratos = [...contratosData];
+                updateContratosTable(filteredContratos);
                 showToast('Contratos actualizados exitosamente', 'success');
                 updateContratosCount(data.total);
             } else {
@@ -115,33 +138,41 @@ function updateContratosCount(count) {
     }
 }
 
-// Buscar contratos
-function searchContratos() {
+// Aplicar filtros de búsqueda y hospital
+function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.trim();
+    const hospitalFilter = document.getElementById('filterHospital');
     
-    if (searchTerm === '') {
-        loadContratos();
-        return;
+    let filtered = [...contratosData];
+    
+    // Filtro por hospital
+    if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== '') {
+        const hospitalId = parseInt(hospitalFilter.value);
+        filtered = filtered.filter(c => c.ID_Hospital === hospitalId);
     }
     
-    fetch(`/api/contratos/search?q=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateContratosTable(data.contratos);
-                updateContratosCount(data.total);
-                
-                if (data.contratos.length === 0) {
-                    showToast('No se encontraron contratos con ese criterio', 'info');
-                }
-            } else {
-                showToast('Error al buscar contratos: ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            showToast('Error de conexión al buscar contratos', 'error');
-            console.error('Error:', error);
+    // Filtro por búsqueda (ID personal o salario)
+    if (searchTerm !== '') {
+        filtered = filtered.filter(contrato => {
+            const idPersonalMatch = contrato.ID_Personal && contrato.ID_Personal.toString().includes(searchTerm);
+            const salarioMatch = contrato.Salario && contrato.Salario.toString().includes(searchTerm);
+            
+            return idPersonalMatch || salarioMatch;
         });
+    }
+    
+    filteredContratos = filtered;
+    updateContratosTable(filteredContratos);
+    updateContratosCount(filteredContratos.length);
+    
+    if (searchTerm !== '' && filteredContratos.length === 0) {
+        showToast('No se encontraron contratos con ese criterio', 'info');
+    }
+}
+
+// Buscar contratos - FUNCIÓN MANTENIDA PARA COMPATIBILIDAD
+function searchContratos() {
+    applyFilters();
 }
 
 // Mostrar modal para agregar nuevo contrato - FUNCIÓN DESHABILITADA

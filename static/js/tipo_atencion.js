@@ -44,7 +44,7 @@ function initializeEventListeners() {
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.trim();
-            if (searchTerm.length >= 3 || searchTerm.length === 0) {
+            if (searchTerm.length >= 1 || searchTerm.length === 0) {
                 searchTiposAtencion(searchTerm);
             }
         });
