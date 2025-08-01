@@ -2,6 +2,37 @@
 
 let currentEditingContrato = null;
 
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Deshabilitar funcionalidades de creación y eliminación para mantener consistencia
+    disableCreateDeleteFunctionality();
+    
+    // Cargar contratos al inicio
+    loadContratos();
+});
+
+// Deshabilitar creación y eliminación para mantener consistencia con Personal Médico
+function disableCreateDeleteFunctionality() {
+    // Ocultar botón "Nuevo Contrato"
+    const btnNuevoContrato = document.querySelector('.btn-success');
+    if (btnNuevoContrato) {
+        btnNuevoContrato.style.display = 'none';
+    }
+    
+    // Agregar mensaje informativo
+    const headerDiv = document.querySelector('.col-md-8');
+    if (headerDiv) {
+        const infoMessage = document.createElement('div');
+        infoMessage.className = 'alert alert-info mt-2';
+        infoMessage.innerHTML = `
+            <i class="bi bi-info-circle"></i>
+            <strong>Modo Solo Lectura:</strong> Los contratos se crean y eliminan automáticamente desde el módulo 
+            <strong>Personal Médico</strong> para mantener la consistencia de datos. Aquí solo puede ver y actualizar contratos existentes.
+        `;
+        headerDiv.appendChild(infoMessage);
+    }
+}
+
 // Cargar todos los contratos desde la API
 function loadContratos() {
     fetch('/api/contratos')
@@ -59,9 +90,10 @@ function updateContratosTable(contratos) {
                             title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" 
-                            onclick="deleteContrato(${contrato.ID_Hospital}, ${contrato.ID_Personal})" 
-                            title="Eliminar">
+                    <!-- Botón eliminar deshabilitado para mantener consistencia -->
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            disabled 
+                            title="Eliminación deshabilitada - Use Personal Médico">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -112,18 +144,11 @@ function searchContratos() {
         });
 }
 
-// Mostrar modal para agregar nuevo contrato
+// Mostrar modal para agregar nuevo contrato - FUNCIÓN DESHABILITADA
 function showAddContratoModal() {
-    currentEditingContrato = null;
-    document.getElementById('contratoModalLabel').textContent = 'Nuevo Contrato';
-    document.getElementById('contratoForm').reset();
-    
-    // Habilitar campos de ID
-    document.getElementById('idHospital').disabled = false;
-    document.getElementById('idPersonal').disabled = false;
-    
-    const modal = new bootstrap.Modal(document.getElementById('contratoModal'));
-    modal.show();
+    // Mostrar mensaje informativo en lugar de abrir modal
+    showToast('La creación de contratos está deshabilitada. Use el módulo Personal Médico para crear contratos y mantener la consistencia de datos.', 'error');
+    return;
 }
 
 // Editar contrato existente
@@ -230,81 +255,17 @@ function saveContrato() {
     });
 }
 
-// Eliminar contrato
+// Eliminar contrato - FUNCIÓN DESHABILITADA
 function deleteContrato(idHospital, idPersonal) {
-    // Crear modal de confirmación Bootstrap (siguiendo patrón de Pacientes)
-    const confirmModal = `
-        <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-exclamation-triangle text-warning"></i>
-                            Confirmar Eliminación
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>¿Está seguro de eliminar este contrato?</p>
-                        <div class="alert alert-light">
-                            <strong>Hospital ID: ${idHospital} | Personal ID: ${idPersonal}</strong><br>
-                            <small class="text-muted">
-                                Contrato entre Hospital ${idHospital} y Personal ${idPersonal}
-                            </small>
-                        </div>
-                        <p class="text-danger">
-                            <i class="bi bi-exclamation-circle"></i>
-                            <strong>Esta acción no se puede deshacer.</strong>
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="confirmDeleteContrato(${idHospital}, ${idPersonal})">
-                            <i class="bi bi-trash"></i> Eliminar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remover modal anterior si existe y agregar nuevo
-    const existingModal = document.getElementById('deleteConfirmModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', confirmModal);
-    
-    // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    modal.show();
+    // Mostrar mensaje informativo en lugar de eliminar
+    showToast('La eliminación de contratos está deshabilitada. Use el módulo Personal Médico para mantener la consistencia de datos.', 'error');
+    return;
 }
 
-// Función para confirmar la eliminación
+// Función para confirmar la eliminación - DESHABILITADA
 function confirmDeleteContrato(idHospital, idPersonal) {
-    // Cerrar modal de confirmación
-    const modalElement = document.getElementById('deleteConfirmModal');
-    if (modalElement) {
-        bootstrap.Modal.getInstance(modalElement).hide();
-    }
-
-    fetch(`/api/contratos/${idHospital}/${idPersonal}`, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message || 'Contrato eliminado exitosamente', 'success');
-            loadContratos(); // Recargar la tabla
-        } else {
-            showToast('Error al eliminar contrato: ' + (data.error || 'Error desconocido'), 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error de conexión al eliminar contrato', 'error');
-        console.error('Error:', error);
-    });
+    showToast('La eliminación de contratos está deshabilitada. Use el módulo Personal Médico para mantener la consistencia de datos.', 'error');
+    return;
 }
 
 // Función auxiliar para mostrar mensajes toast

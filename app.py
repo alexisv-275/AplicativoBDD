@@ -534,25 +534,11 @@ def api_search_contratos():
 
 @app.route('/api/contratos/add', methods=['POST'])
 def api_add_contrato():
-    """API para agregar un nuevo contrato"""
-    try:
-        data = request.get_json()
-        contratos_manager = ContratosManager()
-        
-        result = contratos_manager.create_contrato(
-            data['id_hospital'],
-            data['id_personal'],
-            data['salario'],
-            data.get('fecha_contrato')
-        )
-        
-        if result:
-            return jsonify({'success': True, 'message': 'Contrato creado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'Error al crear contrato'}), 400
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    """API DESHABILITADA - Los contratos se crean desde Personal Médico para mantener consistencia"""
+    return jsonify({
+        'success': False, 
+        'error': 'La creación de contratos desde esta interfaz está deshabilitada. Use el módulo Personal Médico para mantener la consistencia de datos.'
+    }), 403
 
 @app.route('/api/contratos/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
 def api_update_contrato(id_hospital, id_personal):
@@ -578,18 +564,11 @@ def api_update_contrato(id_hospital, id_personal):
 
 @app.route('/api/contratos/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
 def api_delete_contrato(id_hospital, id_personal):
-    """API para eliminar un contrato"""
-    try:
-        contratos_manager = ContratosManager()
-        result = contratos_manager.delete_contrato(id_hospital, id_personal)
-        
-        if result:
-            return jsonify({'success': True, 'message': 'Contrato eliminado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'Contrato no encontrado'}), 404
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    """API DESHABILITADA - Los contratos se eliminan desde Personal Médico para mantener consistencia"""
+    return jsonify({
+        'success': False, 
+        'error': 'La eliminación de contratos desde esta interfaz está deshabilitada. Use el módulo Personal Médico para mantener la consistencia de datos.'
+    }), 403
 
 @app.route('/experiencia')
 def experiencia():
