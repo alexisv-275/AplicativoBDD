@@ -43,7 +43,7 @@ class ExperienciaModel(DatabaseConnection):
                 range_config = self.ID_RANGES.get(current_node, {})
                 return {'success': False, 'error': f'No hay IDs disponibles en el rango {range_config.get("min", "?")} - {range_config.get("max", "?")} para el nodo {current_node}'}
             hospital_id = self.get_hospital_id_by_node(current_node)
-            query = "{{CALL SP_Create_Experiencia (?, ?, ?, ?)}}"
+            query = "{CALL SP_Create_Experiencia (?, ?, ?, ?)}"
             params = (hospital_id, next_id, experiencia_data['Cargo'], experiencia_data['Años_exp'] if 'Años_exp' in experiencia_data else experiencia_data['Anios_exp'])
             connection = self.get_connection(node=current_node)
             if not connection:
@@ -65,7 +65,7 @@ class ExperienciaModel(DatabaseConnection):
             current_node = node or self.detect_current_node()
             if not current_node:
                 return {'success': False, 'error': 'No se puede conectar a ningún nodo'}
-            query = "{{CALL SP_Update_Experiencia (?, ?, ?, ?)}}"
+            query = "{CALL SP_Update_Experiencia (?, ?, ?, ?)}"
             params = (id_hospital, id_personal, experiencia_data['Cargo'], experiencia_data['Años_exp'] if 'Años_exp' in experiencia_data else experiencia_data['Anios_exp'])
             connection = self.get_connection(node=current_node)
             if not connection:
@@ -87,7 +87,7 @@ class ExperienciaModel(DatabaseConnection):
             current_node = node or self.detect_current_node()
             if not current_node:
                 return {'success': False, 'error': 'No se puede conectar a ningún nodo'}
-            query = "{{CALL SP_Delete_Experiencia (?, ?, ?)}}"
+            query = "{CALL SP_Delete_Experiencia (?, ?, ?)}"
             params = (id_hospital, id_personal, cargo)
             connection = self.get_connection(node=current_node)
             if not connection:
@@ -110,8 +110,7 @@ class ExperienciaModel(DatabaseConnection):
             traceback.print_exc()
             print("=====================================================")
             return {'success': False, 'error': 'No se pudo eliminar la experiencia. Puede que esté siendo referenciada en otra tabla.'}
-    """Modelo para manejar operaciones con Vista_Experiencia"""
-    
+
     def __init__(self):
         super().__init__()
     
@@ -161,11 +160,12 @@ class ExperienciaModel(DatabaseConnection):
             }
             
         except Exception as e:
+            current_node = None  # Asegurar que la variable esté definida
             return {
                 'success': False,
                 'error': str(e),
                 'experiencias': [],
-                'node': current_node if 'current_node' in locals() else None,
+                'node': current_node,
                 'total': 0
             }
     
@@ -182,7 +182,7 @@ class ExperienciaModel(DatabaseConnection):
             """
             results = self.execute_query(query, (id_hospital, id_personal), node=current_node)
             
-            if results and len(results) > 0:
+            if results and isinstance(results, list) and len(results) > 0:
                 return results[0]
             
             return None
