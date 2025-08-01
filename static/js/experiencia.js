@@ -29,21 +29,9 @@ class ExperienciaManager {
         }
 
         // Buscador
-        const searchInput = document.querySelector('input[placeholder*="Buscar"]');
+        const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
-        }
-
-        // Filtros
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const cargoFilter = document.querySelectorAll('.form-select')[1];
-        
-        if (hospitalFilter) {
-            hospitalFilter.addEventListener('change', () => this.applyFilters());
-        }
-        
-        if (cargoFilter) {
-            cargoFilter.addEventListener('change', () => this.applyFilters());
         }
 
         // Botón nueva experiencia
@@ -113,28 +101,6 @@ class ExperienciaManager {
         this.searchTimeout = setTimeout(() => {
             this.searchExperiencias(searchTerm);
         }, 500);
-    }
-
-    applyFilters() {
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const cargoFilter = document.querySelectorAll('.form-select')[1];
-        
-        let filtered = Array.isArray(this.experiencias) ? [...this.experiencias] : [];
-        
-        // Filtro por hospital
-        if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== 'Todos los hospitales') {
-            const hospitalId = hospitalFilter.value === 'Hospital 001' ? 1 : 2;
-            filtered = filtered.filter(e => e.ID_Hospital === hospitalId);
-        }
-        
-        // Filtro por cargo
-        if (cargoFilter && cargoFilter.value && cargoFilter.value !== 'Todos los cargos') {
-            filtered = filtered.filter(e => e.Cargo && e.Cargo.toLowerCase().includes(cargoFilter.value.toLowerCase()));
-        }
-        
-        this.filteredExperiencias = filtered;
-        this.updateTable();
-        this.updateStats(filtered.length, this.currentNode);
     }
 
     updateTable() {

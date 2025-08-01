@@ -28,24 +28,17 @@
 
     <!-- Búsqueda y filtros -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-9">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o ID...">
+                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido, ID paciente o dirección..." id="searchInput">
             </div>
         </div>
         <div class="col-md-3">
-            <select class="form-select">
-                <option>Todos los hospitales</option>
-                <option>Hospital 001</option>
-                <option>Hospital 002</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select class="form-select">
-                <option>Todos los sexos</option>
-                <option>Masculino</option>
-                <option>Femenino</option>
+            <select class="form-select" id="filterSexo">
+                <option value="">Todos los sexos</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
             </select>
         </div>
     </div>

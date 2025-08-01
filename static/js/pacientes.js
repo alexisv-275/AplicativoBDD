@@ -29,19 +29,13 @@ class PacientesManager {
         }
 
         // Buscador
-        const searchInput = document.querySelector('input[placeholder*="Buscar"]');
+        const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
         }
 
-        // Filtros
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const sexoFilter = document.querySelectorAll('.form-select')[1];
-        
-        if (hospitalFilter) {
-            hospitalFilter.addEventListener('change', () => this.applyFilters());
-        }
-        
+        // Filtro de sexo
+        const sexoFilter = document.getElementById('filterSexo');
         if (sexoFilter) {
             sexoFilter.addEventListener('change', () => this.applyFilters());
         }
@@ -109,20 +103,13 @@ class PacientesManager {
     }
 
     applyFilters() {
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const sexoFilter = document.querySelectorAll('.form-select')[1];
+        const sexoFilter = document.getElementById('filterSexo');
         
         // Asegurar que pacientes es un array válido
         let filtered = Array.isArray(this.pacientes) ? [...this.pacientes] : [];
         
-        // Filtro por hospital
-        if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== 'Todos los hospitales') {
-            const hospitalId = hospitalFilter.value === 'Hospital 001' ? 1 : 2;
-            filtered = filtered.filter(p => p.ID_Hospital === hospitalId);
-        }
-        
         // Filtro por sexo
-        if (sexoFilter && sexoFilter.value && sexoFilter.value !== 'Todos los sexos') {
+        if (sexoFilter && sexoFilter.value && sexoFilter.value !== '') {
             const sexo = sexoFilter.value === 'Masculino' ? 'M' : 'F';
             filtered = filtered.filter(p => p.Sexo === sexo);
         }
