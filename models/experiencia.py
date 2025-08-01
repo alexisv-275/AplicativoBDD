@@ -33,31 +33,53 @@ class ExperienciaModel(DatabaseConnection):
         return 1 if current_node == 'quito' else 2
 
     def create_experiencia(self, experiencia_data, node=None):
-        """Crea una nueva experiencia usando SP y lógica de rangos"""
+        """Crea una nueva experiencia usando SP con validaciones de rango y existencia"""
         try:
             current_node = node or self.detect_current_node()
             if not current_node:
                 return {'success': False, 'error': 'No se puede conectar a ningún nodo'}
-            next_id = self.get_next_available_id(current_node) if experiencia_data.get('auto_id', True) else experiencia_data['ID_Personal']
-            if next_id is None:
-                range_config = self.ID_RANGES.get(current_node, {})
-                return {'success': False, 'error': f'No hay IDs disponibles en el rango {range_config.get("min", "?")} - {range_config.get("max", "?")} para el nodo {current_node}'}
+            
+            # Validar que se proporcione ID_Personal
+            if 'ID_Personal' not in experiencia_data:
+                return {'success': False, 'error': 'ID_Personal es requerido'}
+            
+            id_personal = int(experiencia_data['ID_Personal'])
+            
+            # Validar rango de ID_Personal según nodo
+            range_config = self.ID_RANGES.get(current_node, {})
+            if not (range_config['min'] <= id_personal <= range_config['max']):
+                return {'success': False, 'error': f'ID_Personal debe estar entre {range_config["min"]} y {range_config["max"]} para el nodo {current_node}'}
+            
             hospital_id = self.get_hospital_id_by_node(current_node)
+            
+            # Validar que el personal médico exista (consultando Vista_Personal_Medico o similar)
+            # Nota: Esta validación se podría mejorar con una consulta específica
+            
             query = "{CALL SP_Create_Experiencia (?, ?, ?, ?)}"
-            params = (hospital_id, next_id, experiencia_data['Cargo'], experiencia_data['Años_exp'] if 'Años_exp' in experiencia_data else experiencia_data['Anios_exp'])
+            params = (hospital_id, id_personal, experiencia_data['Cargo'], experiencia_data['Años_exp'] if 'Años_exp' in experiencia_data else experiencia_data['Anios_exp'])
             connection = self.get_connection(node=current_node)
             if not connection:
                 return {'success': False, 'error': 'No se pudo establecer conexión'}
             cursor = connection.cursor()
-            print(f"🔍 DEBUG: Creando experiencia ID_Personal={next_id}, Hospital={hospital_id}, Nodo={current_node}, Cargo={experiencia_data['Cargo']}")
+            print(f"🔍 DEBUG: Creando experiencia ID_Personal={id_personal}, Hospital={hospital_id}, Nodo={current_node}, Cargo={experiencia_data['Cargo']}")
             cursor.execute(query, params)
+            # Forzar la propagación de errores de SQL Server
+            while cursor.nextset():
+                pass
             connection.commit()
             cursor.close()
             connection.close()
-            return {'success': True, 'message': f'Experiencia creada exitosamente en nodo {current_node}', 'id_personal': next_id, 'id_hospital': hospital_id}
+            return {'success': True, 'message': f'Experiencia creada exitosamente en nodo {current_node}', 'id_personal': id_personal, 'id_hospital': hospital_id}
         except Exception as e:
-            print(f"Error en SP_Create_Experiencia: {e}")
-            return {'success': False, 'error': f'Error al crear experiencia: {str(e)}'}
+            import traceback
+            print("========== EXCEPCIÓN EN SP_Create_Experiencia ==========")
+            print(f"Tipo: {type(e)}")
+            print(f"Contenido: {e}")
+            print("Traceback:")
+            traceback.print_exc()
+            print("=====================================================")
+            # Mensaje genérico para el usuario, error real solo en terminal
+            return {'success': False, 'error': 'No se pudo crear la experiencia. Verifique que el ID_Personal existe en el sistema.'}
 
     def update_experiencia(self, id_hospital, id_personal, experiencia_data, node=None):
         """Actualiza una experiencia existente usando SP"""
@@ -73,13 +95,23 @@ class ExperienciaModel(DatabaseConnection):
             cursor = connection.cursor()
             print(f"🔧 DEBUG: Actualizando experiencia Hospital={id_hospital}, ID_Personal={id_personal}, Cargo={experiencia_data['Cargo']}")
             cursor.execute(query, params)
+            # Forzar la propagación de errores de SQL Server
+            while cursor.nextset():
+                pass
             connection.commit()
             cursor.close()
             connection.close()
             return {'success': True, 'message': 'Experiencia actualizada exitosamente'}
         except Exception as e:
-            print(f"Error en SP_Update_Experiencia: {e}")
-            return {'success': False, 'error': f'Error al actualizar experiencia: {str(e)}'}
+            import traceback
+            print("========== EXCEPCIÓN EN SP_Update_Experiencia ==========")
+            print(f"Tipo: {type(e)}")
+            print(f"Contenido: {e}")
+            print("Traceback:")
+            traceback.print_exc()
+            print("=====================================================")
+            # Mensaje genérico para el usuario, error real solo en terminal
+            return {'success': False, 'error': 'No se pudo actualizar la experiencia. Verifique que los datos sean válidos.'}
 
     def delete_experiencia(self, id_hospital, id_personal, cargo, node=None):
         """Elimina una experiencia usando SP"""
@@ -95,6 +127,7 @@ class ExperienciaModel(DatabaseConnection):
             cursor = connection.cursor()
             print(f"🗑️ DEBUG: Eliminando experiencia Hospital={id_hospital}, ID_Personal={id_personal}, Cargo={cargo}")
             cursor.execute(query, params)
+            # Forzar la propagación de errores de SQL Server
             while cursor.nextset():
                 pass
             connection.commit()
@@ -109,7 +142,8 @@ class ExperienciaModel(DatabaseConnection):
             print("Traceback:")
             traceback.print_exc()
             print("=====================================================")
-            return {'success': False, 'error': 'No se pudo eliminar la experiencia. Puede que esté siendo referenciada en otra tabla.'}
+            # Mensaje genérico para el usuario, error real solo en terminal
+            return {'success': False, 'error': 'No se pudo eliminar la experiencia. Puede que no exista o esté siendo referenciada en otra tabla.'}
 
     def __init__(self):
         super().__init__()

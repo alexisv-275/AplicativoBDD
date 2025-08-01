@@ -132,6 +132,59 @@
     </div>
 </div>
 
+<!-- Modal para agregar/editar experiencia -->
+<div class="modal fade" id="experienciaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="experienciaModalTitle">
+                    <i class="bi bi-person-workspace"></i> Nueva Experiencia
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="experienciaForm">
+                    <input type="hidden" id="edit_id_hospital">
+                    <input type="hidden" id="edit_id_personal">
+                    <input type="hidden" id="edit_cargo_original">
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="id_personal" class="form-label">ID Personal *</label>
+                            <input type="number" class="form-control" id="id_personal" name="ID_Personal" min="1" max="20" required>
+                            <small class="text-muted">Quito: 1-10, Guayaquil: 11-20</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cargo" class="form-label">Cargo *</label>
+                            <input type="text" class="form-control" id="cargo" name="Cargo" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="anios_exp" class="form-label">Años de Experiencia *</label>
+                            <input type="number" class="form-control" id="anios_exp" name="Anios_exp" min="0" max="50" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Los campos marcados con * son obligatorios. 
+                            El ID Personal debe corresponder a un personal médico existente en el sistema.
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="saveExperienciaBtn">
+                    <i class="bi bi-check-circle"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Incluir JavaScript específico para experiencia -->
 <script src="{{ url_for('static', filename='js/experiencia.js') }}"></script>
 

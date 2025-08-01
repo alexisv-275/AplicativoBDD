@@ -45,6 +45,18 @@ class ExperienciaManager {
         if (cargoFilter) {
             cargoFilter.addEventListener('change', () => this.applyFilters());
         }
+
+        // Botón nueva experiencia
+        const btnNueva = document.querySelector('.btn-success');
+        if (btnNueva) {
+            btnNueva.addEventListener('click', () => this.showAddModal());
+        }
+
+        // Botón guardar en modal
+        const saveBtn = document.getElementById('saveExperienciaBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveExperiencia());
+        }
     }
 
     async loadExperiencias() {
@@ -62,13 +74,11 @@ class ExperienciaManager {
                 this.updateStats(data.total || 0, data.node);
                 this.showSuccess(`Cargadas ${data.total || 0} experiencias desde Vista_Experiencia (${data.node})`);
             } else {
-                this.experiencias = [];
-                this.filteredExperiencias = [];
+                // Solo mostrar toast de error, NO vaciar las listas ni actualizar tabla
                 this.showError('Error al cargar experiencias: ' + data.error);
             }
         } catch (error) {
-            this.experiencias = [];
-            this.filteredExperiencias = [];
+            // Solo mostrar toast de error, NO vaciar las listas ni actualizar tabla  
             this.showError('Error de conexión: ' + error.message);
         }
     }
@@ -89,11 +99,11 @@ class ExperienciaManager {
                 this.updateTable();
                 this.updateStats(data.total || 0, data.node);
             } else {
-                this.filteredExperiencias = [];
+                // Solo mostrar toast de error, NO vaciar la lista ni actualizar tabla
                 this.showError('Error en la búsqueda: ' + data.error);
             }
         } catch (error) {
-            this.filteredExperiencias = [];
+            // Solo mostrar toast de error, NO vaciar la lista ni actualizar tabla
             this.showError('Error de búsqueda: ' + error.message);
         }
     }
@@ -170,7 +180,7 @@ class ExperienciaManager {
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger" 
-                                onclick="experienciaManager.deleteExperiencia(${experiencia.ID_Hospital}, ${experiencia.ID_Personal})" 
+                                onclick="experienciaManager.deleteExperiencia(${experiencia.ID_Hospital}, ${experiencia.ID_Personal}, '${this.escapeHtml(experiencia.Cargo)}')" 
                                 title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -222,16 +232,7 @@ class ExperienciaManager {
     }
 
     showError(message) {
-        const tbody = document.querySelector('tbody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-danger py-4">
-                        <i class="bi bi-exclamation-triangle"></i> ${this.escapeHtml(message)}
-                    </td>
-                </tr>
-            `;
-        }
+        // Solo mostrar toast, NO modificar la tabla (igual que en pacientes.js)
         this.showToast(message, 'error');
     }
 
@@ -283,30 +284,241 @@ class ExperienciaManager {
     }
 
     editExperiencia(idHospital, idPersonal) {
-        alert(`Editar experiencia ${idHospital}-${idPersonal}`);
+        // Buscar la experiencia en los datos
+        const experiencia = this.filteredExperiencias.find(e => 
+            e.ID_Hospital === idHospital && e.ID_Personal === idPersonal
+        );
+        
+        if (!experiencia) {
+            this.showError('Experiencia no encontrada');
+            return;
+        }
+        
+        this.showEditModal(experiencia);
     }
 
-    async deleteExperiencia(idHospital, idPersonal) {
-        if (!confirm('¿Está seguro que desea eliminar esta experiencia?')) {
+    showAddModal() {
+        // Limpiar formulario
+        document.getElementById('experienciaForm').reset();
+        document.getElementById('edit_id_hospital').value = '';
+        document.getElementById('edit_id_personal').value = '';
+        document.getElementById('edit_cargo_original').value = '';
+        
+        // Configurar modal para agregar
+        document.getElementById('experienciaModalTitle').innerHTML = 
+            '<i class="bi bi-person-workspace"></i> Nueva Experiencia';
+        document.getElementById('saveExperienciaBtn').innerHTML = 
+            '<i class="bi bi-check-circle"></i> Guardar';
+        
+        // Habilitar campo ID_Personal para nueva experiencia
+        document.getElementById('id_personal').disabled = false;
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('experienciaModal'));
+        modal.show();
+    }
+
+    showEditModal(experiencia) {
+        // Llenar formulario con datos existentes
+        document.getElementById('edit_id_hospital').value = experiencia.ID_Hospital;
+        document.getElementById('edit_id_personal').value = experiencia.ID_Personal;
+        document.getElementById('edit_cargo_original').value = experiencia.Cargo;
+        document.getElementById('id_personal').value = experiencia.ID_Personal;
+        document.getElementById('cargo').value = experiencia.Cargo;
+        document.getElementById('anios_exp').value = experiencia['Años_exp'] || 0;
+        
+        // Configurar modal para editar
+        document.getElementById('experienciaModalTitle').innerHTML = 
+            '<i class="bi bi-pencil"></i> Editar Experiencia';
+        document.getElementById('saveExperienciaBtn').innerHTML = 
+            '<i class="bi bi-check-circle"></i> Actualizar';
+        
+        // Deshabilitar campo ID_Personal en edición (no se puede cambiar)
+        document.getElementById('id_personal').disabled = true;
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('experienciaModal'));
+        modal.show();
+    }
+
+    async saveExperiencia() {
+        const form = document.getElementById('experienciaForm');
+        const formData = new FormData(form);
+        
+        // Convertir FormData a objeto
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+        
+        // Validaciones básicas
+        if (!data.ID_Personal || !data.Cargo || !data.Anios_exp) {
+            this.showError('Por favor complete todos los campos obligatorios');
             return;
         }
 
+        // Validar rango de ID_Personal según nodo
+        const idPersonal = parseInt(data.ID_Personal);
+        if (this.currentNode === 'quito' && (idPersonal < 1 || idPersonal > 10)) {
+            this.showError('ID_Personal debe estar entre 1 y 10 para el nodo Quito');
+            return;
+        }
+        if (this.currentNode === 'guayaquil' && (idPersonal < 11 || idPersonal > 20)) {
+            this.showError('ID_Personal debe estar entre 11 y 20 para el nodo Guayaquil');
+            return;
+        }
+
+        const isEdit = document.getElementById('edit_id_hospital').value !== '';
+        
         try {
-            const response = await fetch(`/api/experiencias/${idHospital}/${idPersonal}`, {
+            let response;
+            
+            if (isEdit) {
+                // Actualizar experiencia existente
+                const idHospital = parseInt(document.getElementById('edit_id_hospital').value);
+                const idPersonal = parseInt(document.getElementById('edit_id_personal').value);
+                
+                console.log('🔧 DEBUG: Actualizando experiencia:', { idHospital, idPersonal, data });
+                
+                response = await fetch(`/api/experiencias/${idHospital}/${idPersonal}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                // Crear nueva experiencia
+                console.log('🔧 DEBUG: Creando experiencia:', data);
+                
+                response = await fetch('/api/experiencias/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            const result = await response.json();
+            console.log('🔧 DEBUG: Respuesta del servidor:', result);
+
+            if (result.success) {
+                this.showSuccess(result.message || (isEdit ? 'Experiencia actualizada exitosamente' : 'Experiencia creada exitosamente'));
+                bootstrap.Modal.getInstance(document.getElementById('experienciaModal')).hide();
+                this.loadExperiencias(); // Recargar la tabla
+            } else {
+                this.showError('Error al guardar experiencia: ' + result.error);
+            }
+
+        } catch (error) {
+            console.error('Error al guardar experiencia:', error);
+            this.showError('Error de conexión: ' + error.message);
+        }
+    }
+
+    async deleteExperiencia(idHospital, idPersonal, cargo) {
+        // Buscar la experiencia en los datos para mostrar la información
+        const experiencia = this.filteredExperiencias.find(e => 
+            e.ID_Hospital === idHospital && e.ID_Personal === idPersonal && e.Cargo === cargo
+        );
+        
+        if (!experiencia) {
+            this.showError('Experiencia no encontrada');
+            return;
+        }
+        
+        console.log('🗑️ DEBUG DELETE - Iniciando eliminación:', { idHospital, idPersonal, cargo, experiencia });
+        
+        // Crear modal de confirmación Bootstrap (siguiendo patrón de Pacientes)
+        const confirmModal = `
+            <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                Confirmar Eliminación
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Está seguro de eliminar la experiencia?</p>
+                            <div class="alert alert-light">
+                                <strong>${this.escapeHtml(experiencia.Cargo || 'N/A')}</strong><br>
+                                <small class="text-muted">
+                                    Hospital: ${experiencia.ID_Hospital} | ID Personal: ${experiencia.ID_Personal} | 
+                                    Años: ${experiencia['Años_exp'] || 'N/A'}
+                                </small>
+                            </div>
+                            <p class="text-danger">
+                                <i class="bi bi-exclamation-circle"></i>
+                                <strong>Esta acción no se puede deshacer.</strong>
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="experienciaManager.confirmDeleteExperiencia(${idHospital}, ${idPersonal}, '${this.escapeHtml(cargo)}')">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe y agregar nuevo
+        const existingModal = document.getElementById('deleteConfirmModal');
+        if (existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', confirmModal);
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        modal.show();
+    }
+
+    async confirmDeleteExperiencia(idHospital, idPersonal, cargo) {
+        console.log('🗑️ DEBUG DELETE - Confirmación recibida:', { idHospital, idPersonal, cargo });
+        
+        // Cerrar modal de confirmación
+        const modalElement = document.getElementById('deleteConfirmModal');
+        if (modalElement) {
+            bootstrap.Modal.getInstance(modalElement).hide();
+        }
+
+        try {
+            const response = await fetch(`/api/experiencias/${idHospital}/${idPersonal}/${encodeURIComponent(cargo)}`, {
                 method: 'DELETE'
             });
             
+            console.log('🗑️ DEBUG DELETE - Response status:', response.status);
             const data = await response.json();
+            console.log('🗑️ DEBUG DELETE - Response data:', data);
             
             if (data.success) {
                 this.showSuccess('Experiencia eliminada exitosamente');
-                this.loadExperiencias();
+                this.loadExperiencias(); // Recargar tabla
             } else {
                 this.showError('Error al eliminar: ' + data.error);
             }
         } catch (error) {
+            console.error('💥 Error en DELETE:', error);
             this.showError('Error de conexión: ' + error.message);
         }
+    }
+
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text ? text.replace(/[&<>"']/g, function(m) { return map[m]; }) : '';
     }
 }
 

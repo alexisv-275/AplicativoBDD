@@ -633,39 +633,67 @@ def api_experiencias():
 
 @app.route('/api/experiencias/add', methods=['POST'])
 def api_add_experiencia():
-    """API para agregar nueva experiencia"""
+    """API para agregar nueva experiencia con ID_Personal específico"""
     try:
         data = request.get_json()
+        print(f"🔍 DEBUG API: Datos recibidos para crear experiencia: {data}")
+        
+        # Validar datos requeridos
+        required_fields = ['ID_Personal', 'Cargo', 'Anios_exp']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False, 
+                    'error': f'Campo requerido faltante: {field}'
+                })
         
         result = experiencia_model.create_experiencia(data)
+        print(f"🔍 DEBUG API: Resultado creación experiencia: {result}")
         
         return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API crear experiencia: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/experiencias/<int:id_hospital>/<int:id_personal>', methods=['PUT'])
 def api_update_experiencia(id_hospital, id_personal):
-    """API para actualizar una experiencia"""
+    """API para actualizar una experiencia usando stored procedure"""
     try:
         data = request.get_json()
+        print(f"🔧 DEBUG API: Actualizando experiencia H={id_hospital}, P={id_personal}, Datos: {data}")
+        
+        # Validar datos requeridos
+        required_fields = ['Cargo', 'Anios_exp']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False, 
+                    'error': f'Campo requerido faltante: {field}'
+                })
         
         result = experiencia_model.update_experiencia(id_hospital, id_personal, data)
+        print(f"🔧 DEBUG API: Resultado actualización: {result}")
         
         return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API actualizar experiencia: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/api/experiencias/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
-def api_delete_experiencia(id_hospital, id_personal):
-    """API para eliminar una experiencia"""
+@app.route('/api/experiencias/<int:id_hospital>/<int:id_personal>/<cargo>', methods=['DELETE'])
+def api_delete_experiencia(id_hospital, id_personal, cargo):
+    """API para eliminar una experiencia usando stored procedure"""
     try:
-        result = experiencia_model.delete_experiencia(id_hospital, id_personal)
+        print(f"🗑️ DEBUG API: Eliminando experiencia H={id_hospital}, P={id_personal}, Cargo={cargo}")
+        
+        result = experiencia_model.delete_experiencia(id_hospital, id_personal, cargo)
+        print(f"🗑️ DEBUG API: Resultado eliminación: {result}")
         
         return jsonify(result)
             
     except Exception as e:
+        print(f"❌ ERROR API eliminar experiencia: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/experiencias/search')
