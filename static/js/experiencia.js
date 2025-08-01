@@ -310,7 +310,7 @@ class ExperienciaManager {
         document.getElementById('saveExperienciaBtn').innerHTML = 
             '<i class="bi bi-check-circle"></i> Guardar';
         
-        // Habilitar campo ID_Personal para nueva experiencia y quitar readonly
+        // Habilitar campo ID_Personal para nueva experiencia (igual que Personal Médico)
         document.getElementById('id_personal').disabled = false;
         document.getElementById('id_personal').readOnly = false;
         
@@ -334,9 +334,9 @@ class ExperienciaManager {
         document.getElementById('saveExperienciaBtn').innerHTML = 
             '<i class="bi bi-check-circle"></i> Actualizar';
         
-        // Hacer campo ID_Personal de solo lectura en lugar de disabled (para que se envíe en FormData)
-        document.getElementById('id_personal').disabled = false;
-        document.getElementById('id_personal').readOnly = true;
+        // Deshabilitar campo ID_Personal para edición (igual que Personal Médico)
+        document.getElementById('id_personal').disabled = true;
+        document.getElementById('id_personal').readOnly = false;
         
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('experienciaModal'));
