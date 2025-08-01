@@ -47,17 +47,19 @@ function updateStatsDisplay(stats) {
 }
 
 function updateGeneralStats(stats) {
+    console.log('📊 Actualizando estadísticas generales...');
+    
     // Pacientes Activos
     const pacientesCard = document.querySelector('.col-md-3:nth-child(1) h4');
     if (pacientesCard) {
-        pacientesCard.textContent = formatNumber(stats.total_pacientes);
+        pacientesCard.innerHTML = formatNumber(stats.total_pacientes);
     }
     
-    // Citas (antes decía "Citas Hoy", ahora solo "Citas")
+    // Citas 
     const citasCard = document.querySelector('.col-md-3:nth-child(2) h4');
     const citasLabel = document.querySelector('.col-md-3:nth-child(2) small');
     if (citasCard) {
-        citasCard.textContent = formatNumber(stats.total_citas);
+        citasCard.innerHTML = formatNumber(stats.total_citas);
     }
     if (citasLabel) {
         citasLabel.textContent = 'Citas';
@@ -66,13 +68,13 @@ function updateGeneralStats(stats) {
     // Personal Médico
     const personalCard = document.querySelector('.col-md-3:nth-child(3) h4');
     if (personalCard) {
-        personalCard.textContent = formatNumber(stats.total_personal);
+        personalCard.innerHTML = formatNumber(stats.total_personal);
     }
     
     // Especialidades
     const especialidadesCard = document.querySelector('.col-md-3:nth-child(4) h4');
     if (especialidadesCard) {
-        especialidadesCard.textContent = formatNumber(stats.total_especialidades);
+        especialidadesCard.innerHTML = formatNumber(stats.total_especialidades);
     }
 }
 
@@ -89,15 +91,15 @@ function updateNodeStats(stats) {
             if (quitoCols.length >= 3) {
                 console.log('✅ Actualizando Quito:', stats.quito);
                 // Pacientes
-                quitoCols[0].querySelector('h4').textContent = formatNumber(stats.quito.pacientes);
+                quitoCols[0].querySelector('h4').innerHTML = formatNumber(stats.quito.pacientes);
                 quitoCols[0].querySelector('small').textContent = 'Pacientes';
                 
-                // Citas (antes "Citas Hoy")
-                quitoCols[1].querySelector('h4').textContent = formatNumber(stats.quito.citas);
+                // Citas
+                quitoCols[1].querySelector('h4').innerHTML = formatNumber(stats.quito.citas);
                 quitoCols[1].querySelector('small').textContent = 'Citas';
                 
-                // Personal Médico (antes "Disponibilidad")
-                quitoCols[2].querySelector('h4').textContent = formatNumber(stats.quito.personal_medico);
+                // Personal Médico
+                quitoCols[2].querySelector('h4').innerHTML = formatNumber(stats.quito.personal_medico);
                 quitoCols[2].querySelector('small').textContent = 'Personal Médico';
             }
         }
@@ -115,15 +117,15 @@ function updateNodeStats(stats) {
             if (guayaquilCols.length >= 3) {
                 console.log('✅ Actualizando Guayaquil:', stats.guayaquil);
                 // Pacientes
-                guayaquilCols[0].querySelector('h4').textContent = formatNumber(stats.guayaquil.pacientes);
+                guayaquilCols[0].querySelector('h4').innerHTML = formatNumber(stats.guayaquil.pacientes);
                 guayaquilCols[0].querySelector('small').textContent = 'Pacientes';
                 
-                // Citas (antes "Citas Hoy")
-                guayaquilCols[1].querySelector('h4').textContent = formatNumber(stats.guayaquil.citas);
+                // Citas
+                guayaquilCols[1].querySelector('h4').innerHTML = formatNumber(stats.guayaquil.citas);
                 guayaquilCols[1].querySelector('small').textContent = 'Citas';
                 
-                // Personal Médico (antes "Disponibilidad")
-                guayaquilCols[2].querySelector('h4').textContent = formatNumber(stats.guayaquil.personal_medico);
+                // Personal Médico
+                guayaquilCols[2].querySelector('h4').innerHTML = formatNumber(stats.guayaquil.personal_medico);
                 guayaquilCols[2].querySelector('small').textContent = 'Personal Médico';
             }
         }
@@ -133,21 +135,22 @@ function updateNodeStats(stats) {
 }
 
 function setDefaultStats() {
-    // Establecer valores por defecto en caso de error
+    console.log('⚠️ Estableciendo valores por defecto...');
+    // Establecer valores por defecto en caso de error (sin spinners)
     const defaultStats = {
-        total_pacientes: 0,
-        total_citas: 0,
-        total_personal: 0,
-        total_especialidades: 0,
+        total_pacientes: '---',
+        total_citas: '---',
+        total_personal: '---',
+        total_especialidades: '---',
         quito: {
-            pacientes: 0,
-            citas: 0,
-            personal_medico: 0
+            pacientes: '---',
+            citas: '---',
+            personal_medico: '---'
         },
         guayaquil: {
-            pacientes: 0,
-            citas: 0,
-            personal_medico: 0
+            pacientes: '---',
+            citas: '---',
+            personal_medico: '---'
         }
     };
     
