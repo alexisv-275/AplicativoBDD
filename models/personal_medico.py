@@ -337,6 +337,37 @@ class PersonalMedicoModel(DatabaseConnection):
             hospital_id = 1 if current_node == 'quito' else 2
             
             # ======================================
+            # VALIDACIÓN: Verificar que NO exista contrato con este ID_Personal
+            # ======================================
+            from .contratos import ContratosManager
+            contratos_manager = ContratosManager()
+            
+            # Verificar si ya existe un contrato con este ID_Personal
+            contrato_existente = contratos_manager.get_contrato_by_ids(hospital_id, next_id)
+            if contrato_existente:
+                print(f"⚠️ CONFLICTO: Ya existe contrato para ID_Personal={next_id}, buscando siguiente ID disponible...")
+                
+                # Buscar siguiente ID que no tenga contrato
+                range_config = self.ID_RANGES[current_node]
+                for id_candidate in range(next_id + 1, range_config['max'] + 1):
+                    # Verificar que no esté usado en Personal Médico
+                    query = "SELECT 1 FROM Vista_INF_Personal WHERE ID_Personal = ?"
+                    personal_exists = self.execute_query(query, params=[id_candidate], node=current_node)
+                    
+                    # Verificar que no tenga contrato
+                    contrato_candidate = contratos_manager.get_contrato_by_ids(hospital_id, id_candidate)
+                    
+                    if not personal_exists and not contrato_candidate:
+                        next_id = id_candidate
+                        print(f"✅ Usando ID_Personal={next_id} (sin conflictos)")
+                        break
+                else:
+                    return {
+                        'success': False,
+                        'error': f'No hay IDs disponibles sin conflictos de contratos en el rango para {current_node}'
+                    }
+            
+            # ======================================
             # PASO 1: Crear Personal Médico en nodo local
             # ======================================
             connection = self.get_connection()
@@ -365,20 +396,38 @@ class PersonalMedicoModel(DatabaseConnection):
             # ======================================
             # PASO 2: Crear Contrato usando conexión normal
             # ======================================
-            from .contratos import ContratosManager
-            
-            # Usar conexión normal - SQL Server maneja el linked server
-            contratos_manager = ContratosManager()
-            
             contrato_creado = contratos_manager.create_contrato(
                 hospital_id, next_id, salario, fecha_contrato
             )
             
             if not contrato_creado:
+                # ROLLBACK: Si falla el contrato, eliminar el personal médico creado
+                try:
+                    self.delete_personal_medico_sp(hospital_id, next_id)
+                    print("🔄 ROLLBACK: Personal médico eliminado debido a fallo en contrato")
+                except:
+                    print("⚠️ ROLLBACK FALLÓ: Personal médico creado pero contrato no. Inconsistencia detectada.")
+                
                 return {
                     'success': False,
-                    'error': 'Personal médico creado, pero falló la creación del contrato'
+                    'error': 'Falló la creación del contrato. Personal médico no creado para mantener consistencia.'
                 }
+            
+            print("Debug: Contrato creado exitosamente en Quito")
+            
+            return {
+                'success': True,
+                'message': f'Personal médico y contrato creados exitosamente (Personal en {current_node}, Contrato en Quito)',
+                'id_personal': next_id,
+                'id_hospital': hospital_id
+            }
+            
+        except Exception as e:
+            print(f"Error detallado al crear personal médico + contrato: {e}")
+            return {
+                'success': False,
+                'error': f'Error al crear personal médico + contrato: {str(e)}'
+            }
             
             print("Debug: Contrato creado exitosamente en Quito")
             
@@ -468,4 +517,66 @@ class PersonalMedicoModel(DatabaseConnection):
             return {
                 'success': False,
                 'error': 'No se pudo eliminar el personal médico. Puede que esté siendo referenciado en otra tabla.'
+            }
+
+    def delete_personal_medico_with_contrato(self, id_hospital, id_personal):
+        """Eliminar personal médico Y su contrato asociado para mantener consistencia"""
+        try:
+            print(f"🗑️ Iniciando eliminación consistente: Personal={id_personal}, Hospital={id_hospital}")
+            
+            # ======================================
+            # PASO 1: Verificar que el personal médico existe
+            # ======================================
+            personal_exists = self.get_personal_medico_by_id(id_hospital, id_personal)
+            if not personal_exists:
+                return {
+                    'success': False,
+                    'error': 'El personal médico no existe'
+                }
+            
+            # ======================================
+            # PASO 2: Eliminar contrato asociado (si existe)
+            # ======================================
+            from .contratos import ContratosManager
+            contratos_manager = ContratosManager()
+            
+            contrato_existente = contratos_manager.get_contrato_by_ids(id_hospital, id_personal)
+            if contrato_existente:
+                print(f"🗑️ Eliminando contrato asociado para ID_Personal={id_personal}")
+                contrato_eliminado = contratos_manager.delete_contrato(id_hospital, id_personal)
+                if not contrato_eliminado:
+                    print("⚠️ ADVERTENCIA: No se pudo eliminar el contrato, pero continuando...")
+                else:
+                    print("✅ Contrato eliminado exitosamente")
+            else:
+                print(f"ℹ️ No hay contrato asociado para ID_Personal={id_personal}")
+            
+            # ======================================
+            # PASO 3: Eliminar personal médico
+            # ======================================
+            print(f"🗑️ Eliminando personal médico ID_Personal={id_personal}")
+            personal_eliminado = self.delete_personal_medico_sp(id_hospital, id_personal)
+            
+            if personal_eliminado['success']:
+                return {
+                    'success': True,
+                    'message': 'Personal médico y contrato eliminados exitosamente (consistencia mantenida)'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Error al eliminar personal médico: {personal_eliminado["error"]}'
+                }
+            
+        except Exception as e:
+            import traceback
+            print("========== EXCEPCIÓN EN delete_personal_medico_with_contrato ==========")
+            print(f"Tipo: {type(e)}")
+            print(f"Contenido: {e}")
+            print("Traceback:")
+            traceback.print_exc()
+            print("=====================================================")
+            return {
+                'success': False,
+                'error': f'Error al eliminar personal médico con contrato: {str(e)}'
             }

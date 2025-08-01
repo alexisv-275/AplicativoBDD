@@ -414,11 +414,12 @@ def api_update_personal_medico(id_hospital, id_personal):
 
 @app.route('/api/personal-medico/<int:id_hospital>/<int:id_personal>', methods=['DELETE'])
 def api_delete_personal_medico(id_hospital, id_personal):
-    """API para eliminar un personal médico usando SP"""
+    """API para eliminar un personal médico Y su contrato asociado (consistencia)"""
     try:
         print(f'🗑️ DEBUG DELETE - IDs: hospital={id_hospital}, personal={id_personal}')
         
-        result = personal_medico_model.delete_personal_medico_sp(id_hospital, id_personal)
+        # Usar el método que elimina Personal Médico + Contrato para mantener consistencia
+        result = personal_medico_model.delete_personal_medico_with_contrato(id_hospital, id_personal)
         
         print(f'🗑️ DEBUG DELETE - Resultado: {result}')
         
