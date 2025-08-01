@@ -100,30 +100,49 @@ class ContratosManager(DatabaseConnection):
             # Determinar tabla según el nodo
             current_node = self.detect_current_node()
             if current_node == 'quito':
-                # INSERT directo en Quito
+                # INSERT directo en Quito - transacción normal
                 tabla_contratos = "Contratos"
                 print(f"🔗 DEBUG: INSERT local en Quito: {tabla_contratos}")
+                
+                if fecha_contrato is None:
+                    insert_query = f"""
+                    INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                    VALUES (?, ?, ?, GETDATE())
+                    """
+                    cursor.execute(insert_query, (id_hospital, id_personal, salario))
+                else:
+                    insert_query = f"""
+                    INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                    VALUES (?, ?, ?, ?)
+                    """
+                    cursor.execute(insert_query, (id_hospital, id_personal, salario, fecha_contrato))
+                
+                # Confirmar la transacción local
+                connection.commit()
+                
             else:
-                # INSERT remoto via linked server (no requiere RPC)
+                # INSERT remoto via linked server - usar autocommit para evitar transacciones distribuidas
                 tabla_contratos = "[ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[Contratos]"
-                print(f"🔗 DEBUG: INSERT remoto via linked server: {tabla_contratos}")
-            
-            # Usar fecha actual si no se proporciona
-            if fecha_contrato is None:
-                insert_query = f"""
-                INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
-                VALUES (?, ?, ?, GETDATE())
-                """
-                cursor.execute(insert_query, (id_hospital, id_personal, salario))
-            else:
-                insert_query = f"""
-                INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
-                VALUES (?, ?, ?, ?)
-                """
-                cursor.execute(insert_query, (id_hospital, id_personal, salario, fecha_contrato))
-            
-            # Confirmar la transacción
-            connection.commit()
+                print(f"🔗 DEBUG: INSERT remoto via linked server con autocommit: {tabla_contratos}")
+                
+                # Habilitar autocommit para linked server
+                connection.autocommit = True
+                
+                if fecha_contrato is None:
+                    insert_query = f"""
+                    INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                    VALUES (?, ?, ?, GETDATE())
+                    """
+                    cursor.execute(insert_query, (id_hospital, id_personal, salario))
+                else:
+                    insert_query = f"""
+                    INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                    VALUES (?, ?, ?, ?)
+                    """
+                    cursor.execute(insert_query, (id_hospital, id_personal, salario, fecha_contrato))
+                
+                # Restaurar autocommit
+                connection.autocommit = False
             
             cursor.close()
             connection.close()
@@ -168,23 +187,35 @@ class ContratosManager(DatabaseConnection):
             # Determinar tabla según el nodo
             current_node = self.detect_current_node()
             if current_node == 'quito':
-                # DELETE directo en Quito
+                # DELETE directo en Quito - transacción normal
                 tabla_contratos = "Contratos"
                 print(f"🔗 DEBUG: DELETE local en Quito: {tabla_contratos}")
+                
+                delete_query = f"""
+                DELETE FROM {tabla_contratos}
+                WHERE ID_Hospital = ? AND ID_Personal = ?
+                """
+                cursor.execute(delete_query, (id_hospital, id_personal))
+                
+                # Confirmar la transacción local
+                connection.commit()
+                
             else:
-                # DELETE remoto via linked server (no requiere RPC)
+                # DELETE remoto via linked server - usar autocommit para evitar transacciones distribuidas
                 tabla_contratos = "[ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[Contratos]"
-                print(f"🔗 DEBUG: DELETE remoto via linked server: {tabla_contratos}")
-            
-            delete_query = f"""
-            DELETE FROM {tabla_contratos}
-            WHERE ID_Hospital = ? AND ID_Personal = ?
-            """
-            
-            cursor.execute(delete_query, (id_hospital, id_personal))
-            
-            # Confirmar la transacción
-            connection.commit()
+                print(f"🔗 DEBUG: DELETE remoto via linked server con autocommit: {tabla_contratos}")
+                
+                # Habilitar autocommit para linked server
+                connection.autocommit = True
+                
+                delete_query = f"""
+                DELETE FROM {tabla_contratos}
+                WHERE ID_Hospital = ? AND ID_Personal = ?
+                """
+                cursor.execute(delete_query, (id_hospital, id_personal))
+                
+                # Restaurar autocommit
+                connection.autocommit = False
             
             cursor.close()
             connection.close()
