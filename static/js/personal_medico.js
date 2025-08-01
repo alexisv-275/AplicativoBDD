@@ -16,15 +16,21 @@ function initializeEventListeners() {
         btnActualizar.addEventListener('click', () => loadPersonalMedico());
     }
 
-    // Buscar personal médico
-    const searchInput = document.querySelector('input[placeholder*="Buscar"]');
+    // Buscar personal médico - reducir a 1 carácter mínimo
+    const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.trim();
-            if (searchTerm.length >= 3 || searchTerm.length === 0) {
+            if (searchTerm.length >= 1 || searchTerm.length === 0) {
                 searchPersonalMedico(searchTerm);
             }
         });
+    }
+
+    // Filtro por hospital
+    const hospitalFilter = document.getElementById('filterHospital');
+    if (hospitalFilter) {
+        hospitalFilter.addEventListener('change', () => applyFilters());
     }
 
     // Botón nuevo personal médico - usar el botón del modal
@@ -123,7 +129,7 @@ function updateTable(personalMedico) {
 
 function searchPersonalMedico(searchTerm) {
     if (!searchTerm) {
-        updateTable(personalMedicoData);
+        applyFilters(); // Aplicar filtros sin búsqueda
         return;
     }
     
@@ -135,8 +141,17 @@ function searchPersonalMedico(searchTerm) {
             showLoading(false);
             
             if (data.success) {
-                updateTable(data.personal_medico);
-                updatePersonalMedicoStats(data.total);
+                // Aplicar filtro de hospital a los resultados de búsqueda
+                const hospitalFilter = document.getElementById('filterHospital');
+                let filteredData = data.personal_medico;
+                
+                if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== '') {
+                    const hospitalId = parseInt(hospitalFilter.value);
+                    filteredData = filteredData.filter(p => p.ID_Hospital === hospitalId);
+                }
+                
+                updateTable(filteredData);
+                updatePersonalMedicoStats(filteredData.length);
             } else {
                 showError('Error en la búsqueda: ' + data.error);
             }
@@ -146,6 +161,20 @@ function searchPersonalMedico(searchTerm) {
             console.error('Error:', error);
             showError('Error de conexión en la búsqueda');
         });
+}
+
+function applyFilters() {
+    const hospitalFilter = document.getElementById('filterHospital');
+    let filtered = [...personalMedicoData];
+    
+    // Filtro por hospital
+    if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== '') {
+        const hospitalId = parseInt(hospitalFilter.value);
+        filtered = filtered.filter(p => p.ID_Hospital === hospitalId);
+    }
+    
+    updateTable(filtered);
+    updatePersonalMedicoStats(filtered.length);
 }
 
 function showAddModal() {

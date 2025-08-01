@@ -25,13 +25,20 @@
         </div>
     </div>
 
-    <!-- Búsqueda -->
+    <!-- Búsqueda y filtros -->
     <div class="row mb-4">
-        <div class="col-md-12">
+        <div class="col-md-9">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido, ID personal o ID hospital...">
+                <input type="text" class="form-control" placeholder="Buscar por nombre, apellido, ID personal o especialidad..." id="searchInput">
             </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterHospital">
+                <option value="">Todos los hospitales</option>
+                <option value="1">Hospital Quito (ID: 1)</option>
+                <option value="2">Hospital Guayaquil (ID: 2)</option>
+            </select>
         </div>
     </div>
 
