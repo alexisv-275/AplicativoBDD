@@ -310,8 +310,9 @@ class ExperienciaManager {
         document.getElementById('saveExperienciaBtn').innerHTML = 
             '<i class="bi bi-check-circle"></i> Guardar';
         
-        // Habilitar campo ID_Personal para nueva experiencia
+        // Habilitar campo ID_Personal para nueva experiencia y quitar readonly
         document.getElementById('id_personal').disabled = false;
+        document.getElementById('id_personal').readOnly = false;
         
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('experienciaModal'));
@@ -333,8 +334,9 @@ class ExperienciaManager {
         document.getElementById('saveExperienciaBtn').innerHTML = 
             '<i class="bi bi-check-circle"></i> Actualizar';
         
-        // Deshabilitar campo ID_Personal en edición (no se puede cambiar)
-        document.getElementById('id_personal').disabled = true;
+        // Hacer campo ID_Personal de solo lectura en lugar de disabled (para que se envíe en FormData)
+        document.getElementById('id_personal').disabled = false;
+        document.getElementById('id_personal').readOnly = true;
         
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('experienciaModal'));
@@ -342,45 +344,58 @@ class ExperienciaManager {
     }
 
     async saveExperiencia() {
-        const form = document.getElementById('experienciaForm');
-        const formData = new FormData(form);
+        const isEdit = document.getElementById('edit_id_hospital').value !== '';
         
-        // Convertir FormData a objeto
-        const data = {};
-        for (let [key, value] of formData.entries()) {
-            data[key] = value;
-        }
+        // Obtener valores directamente de los elementos (como en personal_medico.js)
+        const idPersonal = document.getElementById('id_personal').value.trim();
+        const cargo = document.getElementById('cargo').value.trim();
+        const aniosExp = document.getElementById('anios_exp').value.trim();
+        
+        console.log('🔧 DEBUG: Valores del formulario:');
+        console.log('  ID_Personal:', idPersonal);
+        console.log('  Cargo:', cargo);
+        console.log('  Anios_exp:', aniosExp);
+        console.log('  Es edición:', isEdit);
         
         // Validaciones básicas
-        if (!data.ID_Personal || !data.Cargo || !data.Anios_exp) {
+        if (!idPersonal || !cargo || !aniosExp) {
+            console.log('❌ Validación fallida - campos vacíos');
             this.showError('Por favor complete todos los campos obligatorios');
             return;
         }
 
         // Validar rango de ID_Personal según nodo
-        const idPersonal = parseInt(data.ID_Personal);
-        if (this.currentNode === 'quito' && (idPersonal < 1 || idPersonal > 10)) {
+        const idPersonalNum = parseInt(idPersonal);
+        if (this.currentNode === 'quito' && (idPersonalNum < 1 || idPersonalNum > 10)) {
             this.showError('ID_Personal debe estar entre 1 y 10 para el nodo Quito');
             return;
         }
-        if (this.currentNode === 'guayaquil' && (idPersonal < 11 || idPersonal > 20)) {
+        if (this.currentNode === 'guayaquil' && (idPersonalNum < 11 || idPersonalNum > 20)) {
             this.showError('ID_Personal debe estar entre 11 y 20 para el nodo Guayaquil');
             return;
         }
 
-        const isEdit = document.getElementById('edit_id_hospital').value !== '';
+        const data = {
+            ID_Personal: idPersonal,
+            Cargo: cargo,
+            Anios_exp: aniosExp
+        };
         
         try {
             let response;
             
             if (isEdit) {
                 // Actualizar experiencia existente
-                const idHospital = parseInt(document.getElementById('edit_id_hospital').value);
-                const idPersonal = parseInt(document.getElementById('edit_id_personal').value);
+                const idHospital = document.getElementById('edit_id_hospital').value;
+                const idPersonalOriginal = document.getElementById('edit_id_personal').value;
                 
-                console.log('🔧 DEBUG: Actualizando experiencia:', { idHospital, idPersonal, data });
+                console.log('🔧 DEBUG: Actualizando experiencia:', { 
+                    idHospital, 
+                    idPersonalOriginal, 
+                    data 
+                });
                 
-                response = await fetch(`/api/experiencias/${idHospital}/${idPersonal}`, {
+                response = await fetch(`/api/experiencias/${idHospital}/${idPersonalOriginal}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

@@ -74,20 +74,21 @@ BEGIN
     BEGIN DISTRIBUTED TRANSACTION;
     
     BEGIN TRY
-        -- 1. Validar que existe la experiencia
+        -- 1. Validar que existe al menos una experiencia para ese Hospital y Personal
         IF NOT EXISTS (
             SELECT 1 FROM Vista_Experiencia 
-            WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal AND Cargo = @Cargo
+            WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal
         )
         BEGIN
-            RAISERROR('No existe experiencia con Hospital %d, Personal %d y Cargo %s', 16, 1, @ID_Hospital, @ID_Personal, @Cargo);
+            RAISERROR('No existe experiencia para Hospital %d y Personal %d', 16, 1, @ID_Hospital, @ID_Personal);
             RETURN;
         END
         
-        -- 2. Actualizar en Vista_Experiencia (particionada entre servidores)
+        -- 2. Actualizar directamente por ID_Hospital e ID_Personal (como Personal Médico)
+        -- Esto evita el problema de múltiples particiones en la vista
         UPDATE Vista_Experiencia
-        SET Años_exp = @Años_exp
-        WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal AND Cargo = @Cargo;
+        SET Cargo = @Cargo, Años_exp = @Años_exp
+        WHERE ID_Hospital = @ID_Hospital AND ID_Personal = @ID_Personal;
         
         COMMIT TRANSACTION;
         
