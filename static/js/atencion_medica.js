@@ -34,19 +34,13 @@ class AtencionMedicaManager {
         }
 
         // Buscador
-        const searchInput = document.querySelector('input[placeholder*="Buscar"]');
+        const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
         }
 
-        // Filtros
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const tipoFilter = document.querySelectorAll('.form-select')[1];
-        
-        if (hospitalFilter) {
-            hospitalFilter.addEventListener('change', () => this.applyFilters());
-        }
-        
+        // Filtro por tipo
+        const tipoFilter = document.getElementById('filterTipo');
         if (tipoFilter) {
             tipoFilter.addEventListener('change', () => this.applyFilters());
         }
@@ -114,20 +108,13 @@ class AtencionMedicaManager {
     }
 
     applyFilters() {
-        const hospitalFilter = document.querySelectorAll('.form-select')[0];
-        const tipoFilter = document.querySelectorAll('.form-select')[1];
+        const tipoFilter = document.getElementById('filterTipo');
         
         // Asegurar que tenemos un array válido
         let filtered = Array.isArray(this.atenciones) ? [...this.atenciones] : [];
         
-        // Filtro por hospital
-        if (hospitalFilter && hospitalFilter.value && hospitalFilter.value !== 'Todos los hospitales') {
-            const hospitalId = hospitalFilter.value === 'Hospital 001' ? 1 : 2;
-            filtered = filtered.filter(a => a.ID_Hospital === hospitalId);
-        }
-        
         // Filtro por tipo de atención
-        if (tipoFilter && tipoFilter.value && tipoFilter.value !== 'Todos los tipos') {
+        if (tipoFilter && tipoFilter.value && tipoFilter.value !== '') {
             const tipoId = parseInt(tipoFilter.value);
             filtered = filtered.filter(a => a.ID_Tipo === tipoId);
         }

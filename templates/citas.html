@@ -28,25 +28,22 @@
 
     <!-- Búsqueda y filtros -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-9">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" placeholder="Buscar por ID paciente, personal o atención...">
+                <input type="text" class="form-control" placeholder="Buscar por ID paciente, personal, atención, diagnóstico o tratamiento..." id="searchInput">
             </div>
         </div>
         <div class="col-md-3">
-            <select class="form-select">
-                <option>Todos los hospitales</option>
-                <option>Hospital 001</option>
-                <option>Hospital 002</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select class="form-select">
-                <option>Todos los tipos</option>
+            <select class="form-select" id="filterTipo">
+                <option value="">Todos los tipos</option>
                 <option value="1">Tipo 1</option>
                 <option value="2">Tipo 2</option>
                 <option value="3">Tipo 3</option>
+                <option value="4">Tipo 4</option>
+                <option value="5">Tipo 5</option>
+                <option value="6">Tipo 6</option>
+                <option value="7">Tipo 7</option>
             </select>
         </div>
     </div>
