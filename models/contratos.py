@@ -89,7 +89,7 @@ class ContratosManager(DatabaseConnection):
             return None
 
     def create_contrato(self, id_hospital, id_personal, salario, fecha_contrato=None):
-        """Crear un nuevo contrato usando Stored Procedure (usando linked server si es necesario)"""
+        """Crear un nuevo contrato usando INSERT directo (usando linked server si es necesario)"""
         try:
             connection = self.get_connection()
             if not connection:
@@ -97,18 +97,30 @@ class ContratosManager(DatabaseConnection):
                 
             cursor = connection.cursor()
             
-            # Determinar cómo ejecutar el SP según el nodo
+            # Determinar tabla según el nodo
             current_node = self.detect_current_node()
             if current_node == 'quito':
-                # Ejecutar SP directamente en Quito
-                sp_call = "{CALL CrearContrato (?, ?, ?, ?)}"
-                print(f"🔗 DEBUG: Ejecutando SP local en Quito: {sp_call}")
+                # INSERT directo en Quito
+                tabla_contratos = "Contratos"
+                print(f"🔗 DEBUG: INSERT local en Quito: {tabla_contratos}")
             else:
-                # Ejecutar SP remoto via linked server
-                sp_call = "{CALL [ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[CrearContrato] (?, ?, ?, ?)}"
-                print(f"🔗 DEBUG: Ejecutando SP remoto via linked server: {sp_call}")
+                # INSERT remoto via linked server (no requiere RPC)
+                tabla_contratos = "[ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[Contratos]"
+                print(f"🔗 DEBUG: INSERT remoto via linked server: {tabla_contratos}")
             
-            cursor.execute(sp_call, (id_hospital, id_personal, salario, fecha_contrato))
+            # Usar fecha actual si no se proporciona
+            if fecha_contrato is None:
+                insert_query = f"""
+                INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                VALUES (?, ?, ?, GETDATE())
+                """
+                cursor.execute(insert_query, (id_hospital, id_personal, salario))
+            else:
+                insert_query = f"""
+                INSERT INTO {tabla_contratos} (ID_Hospital, ID_Personal, Salario, Fecha_Contrato)
+                VALUES (?, ?, ?, ?)
+                """
+                cursor.execute(insert_query, (id_hospital, id_personal, salario, fecha_contrato))
             
             # Confirmar la transacción
             connection.commit()
@@ -145,7 +157,7 @@ class ContratosManager(DatabaseConnection):
             return False
 
     def delete_contrato(self, id_hospital, id_personal):
-        """Eliminar un contrato usando Stored Procedure (usando linked server si es necesario)"""
+        """Eliminar un contrato usando DELETE directo (usando linked server si es necesario)"""
         try:
             connection = self.get_connection()
             if not connection:
@@ -153,18 +165,23 @@ class ContratosManager(DatabaseConnection):
                 
             cursor = connection.cursor()
             
-            # Determinar cómo ejecutar el SP según el nodo
+            # Determinar tabla según el nodo
             current_node = self.detect_current_node()
             if current_node == 'quito':
-                # Ejecutar SP directamente en Quito
-                sp_call = "{CALL EliminarContrato (?, ?)}"
-                print(f"🔗 DEBUG: Ejecutando SP local en Quito: {sp_call}")
+                # DELETE directo en Quito
+                tabla_contratos = "Contratos"
+                print(f"🔗 DEBUG: DELETE local en Quito: {tabla_contratos}")
             else:
-                # Ejecutar SP remoto via linked server
-                sp_call = "{CALL [ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[EliminarContrato] (?, ?)}"
-                print(f"🔗 DEBUG: Ejecutando SP remoto via linked server: {sp_call}")
+                # DELETE remoto via linked server (no requiere RPC)
+                tabla_contratos = "[ASUSVIVOBOOK].[Red_de_salud_Quito].[dbo].[Contratos]"
+                print(f"🔗 DEBUG: DELETE remoto via linked server: {tabla_contratos}")
             
-            cursor.execute(sp_call, (id_hospital, id_personal))
+            delete_query = f"""
+            DELETE FROM {tabla_contratos}
+            WHERE ID_Hospital = ? AND ID_Personal = ?
+            """
+            
+            cursor.execute(delete_query, (id_hospital, id_personal))
             
             # Confirmar la transacción
             connection.commit()
