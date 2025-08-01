@@ -854,8 +854,16 @@ def api_search_tipos_atencion():
 
 @app.route('/api/tipos-atencion/add', methods=['POST'])
 def api_add_tipo_atencion():
-    """API para agregar un nuevo tipo de atención"""
+    """API para agregar un nuevo tipo de atención - SOLO QUITO (replicación unidireccional)"""
     try:
+        # Detectar nodo actual
+        current_node = tipo_atencion_model.detect_current_node()
+        if current_node != 'quito':
+            return jsonify({
+                'success': False,
+                'error': 'Operación no permitida. Los tipos de atención se gestionan únicamente desde Quito y se replican a Guayaquil.'
+            }), 403
+        
         data = request.get_json()
         print(f'➕ DEBUG CREATE TIPO ATENCIÓN - Datos recibidos: {data}')
         
@@ -876,8 +884,16 @@ def api_add_tipo_atencion():
 
 @app.route('/api/tipos-atencion/<int:id_tipo>', methods=['PUT'])
 def api_update_tipo_atencion(id_tipo):
-    """API para actualizar un tipo de atención"""
+    """API para actualizar un tipo de atención - SOLO QUITO (replicación unidireccional)"""
     try:
+        # Detectar nodo actual
+        current_node = tipo_atencion_model.detect_current_node()
+        if current_node != 'quito':
+            return jsonify({
+                'success': False,
+                'error': 'Operación no permitida. Los tipos de atención se gestionan únicamente desde Quito y se replican a Guayaquil.'
+            }), 403
+        
         data = request.get_json()
         print(f'🔧 DEBUG UPDATE TIPO ATENCIÓN - ID: {id_tipo}, Datos: {data}')
         
@@ -898,8 +914,16 @@ def api_update_tipo_atencion(id_tipo):
 
 @app.route('/api/tipos-atencion/<int:id_tipo>', methods=['DELETE'])
 def api_delete_tipo_atencion(id_tipo):
-    """API para eliminar un tipo de atención"""
+    """API para eliminar un tipo de atención - SOLO QUITO (replicación unidireccional)"""
     try:
+        # Detectar nodo actual
+        current_node = tipo_atencion_model.detect_current_node()
+        if current_node != 'quito':
+            return jsonify({
+                'success': False,
+                'error': 'Operación no permitida. Los tipos de atención se gestionan únicamente desde Quito y se replican a Guayaquil.'
+            }), 403
+        
         print(f'🗑️ DEBUG DELETE TIPO ATENCIÓN - ID: {id_tipo}')
         
         result = tipo_atencion_model.delete_tipo_atencion(id_tipo)

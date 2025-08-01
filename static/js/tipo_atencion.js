@@ -6,7 +6,30 @@ let currentNode = 'quito';
 document.addEventListener('DOMContentLoaded', function() {
     loadTiposAtencion();
     initializeEventListeners();
+    checkNodeRestrictions();
 });
+
+function checkNodeRestrictions() {
+    // Detectar si estamos en Guayaquil y deshabilitar operaciones de escritura
+    if (currentNode === 'guayaquil') {
+        // Deshabilitar botón de agregar
+        const btnAgregar = document.querySelector('button[onclick*="showCreateModal"], .btn-success');
+        if (btnAgregar) {
+            btnAgregar.disabled = true;
+            btnAgregar.title = 'Los tipos de atención se gestionan únicamente desde Quito';
+            btnAgregar.innerHTML = '<i class="fas fa-plus"></i> Solo Lectura (Replicación desde Quito)';
+        }
+        
+        // Mostrar mensaje informativo
+        const container = document.querySelector('.container-fluid');
+        if (container && !document.querySelector('.replication-notice')) {
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-info replication-notice';
+            notice.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Modo Solo Lectura:</strong> Los tipos de atención se gestionan desde Quito y se replican automáticamente a Guayaquil.';
+            container.insertBefore(notice, container.firstChild);
+        }
+    }
+}
 
 function initializeEventListeners() {
     // Botón actualizar
@@ -88,12 +111,14 @@ function updateTable(tiposAtencion) {
             <td class="text-center">
                 <button class="btn btn-sm btn-outline-warning me-1" 
                         onclick="editTipoAtencion(${tipoAtencion.ID_Tipo})" 
-                        title="Editar">
+                        title="Editar"
+                        ${currentNode === 'guayaquil' ? 'disabled title="Solo disponible en Quito"' : ''}>
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" 
                         onclick="deleteTipoAtencion(${tipoAtencion.ID_Tipo})" 
-                        title="Eliminar">
+                        title="Eliminar"
+                        ${currentNode === 'guayaquil' ? 'disabled title="Solo disponible en Quito"' : ''}>
                     <i class="bi bi-trash"></i>
                 </button>
             </td>
