@@ -297,25 +297,59 @@ function updateEspecialidad() {
 function deleteEspecialidad(id) {
     const especialidad = especialidadesData.find(e => e.ID_Especialidad === id);
     if (!especialidad) return;
-    
-    if (confirm(`¿Está seguro de eliminar la especialidad "${especialidad.Área}"?`)) {
-        fetch(`/api/especialidades/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess('Especialidad eliminada exitosamente');
-                loadEspecialidades(); // Recargar datos
-            } else {
-                showError('Error al eliminar especialidad: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('Error de conexión al eliminar especialidad');
-        });
+
+    // Rellenar el contenido del modal
+    const modalBody = document.getElementById('deleteEspecialidadModalBody');
+    if (modalBody) {
+        modalBody.innerHTML = `
+            <p>¿Está seguro de eliminar la especialidad?</p>
+            <div class="alert alert-light">
+                <strong>${especialidad.Área || 'N/A'}</strong><br>
+                <small class="text-muted">ID Especialidad: ${especialidad.ID_Especialidad}</small>
+            </div>
+            <p class="text-danger">
+                <i class="bi bi-exclamation-circle"></i>
+                <strong>Esta acción no se puede deshacer.</strong>
+            </p>
+        `;
     }
+
+    // Configurar el botón de confirmación
+    const confirmBtn = document.getElementById('confirmDeleteEspecialidadBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            confirmDeleteEspecialidad(id);
+        };
+    }
+
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteEspecialidadModal'));
+    modal.show();
+}
+
+function confirmDeleteEspecialidad(id) {
+    // Cerrar modal
+    const modalElement = document.getElementById('deleteEspecialidadModal');
+    if (modalElement) {
+        bootstrap.Modal.getInstance(modalElement).hide();
+    }
+
+    fetch(`/api/especialidades/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess('Especialidad eliminada exitosamente');
+            loadEspecialidades(); // Recargar datos
+        } else {
+            showError('Error al eliminar especialidad: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error de conexión al eliminar especialidad');
+    });
 }
 
 function updateNodeIndicator(node) {
