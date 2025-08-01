@@ -941,6 +941,63 @@ def api_delete_tipo_atencion(id_tipo):
             'error': str(e)
         }), 500
 
+# ================== API ESTADÍSTICAS HOSPITAL ==================
+
+@app.route('/api/hospital/stats', methods=['GET'])
+def api_hospital_stats():
+    """API para obtener estadísticas del hospital (datos reales) - Usando SELECT COUNT directo"""
+    try:
+        stats = {}
+        
+        print("📊 DEBUG: Obteniendo estadísticas con SELECT COUNT...")
+        
+        # Función helper para obtener conteos
+        def get_count(query):
+            try:
+                result = pacientes_model.execute_query(query)
+                if result and isinstance(result, list) and len(result) > 0:
+                    # El resultado de COUNT(*) viene en la primera columna del primer registro
+                    count_value = list(result[0].values())[0]
+                    return int(count_value) if count_value is not None else 0
+                return 0
+            except Exception as e:
+                print(f"❌ Error en consulta COUNT: {e}")
+                return 0
+        
+        # 1. Totales generales
+        stats['total_pacientes'] = get_count("SELECT COUNT(*) FROM Vista_Paciente")
+        stats['total_citas'] = get_count("SELECT COUNT(*) FROM Vista_Atencion_Medica")
+        stats['total_personal'] = get_count("SELECT COUNT(*) FROM Vista_INF_Personal")
+        stats['total_especialidades'] = get_count("SELECT COUNT(*) FROM Especialidad")
+        
+        # 2. Quito (ID_Hospital = 1)
+        stats['quito'] = {
+            'pacientes': get_count("SELECT COUNT(*) FROM Vista_Paciente WHERE ID_Hospital = 1"),
+            'citas': get_count("SELECT COUNT(*) FROM Vista_Atencion_Medica WHERE ID_Hospital = 1"),
+            'personal_medico': get_count("SELECT COUNT(*) FROM Vista_INF_Personal WHERE ID_Hospital = 1")
+        }
+        
+        # 3. Guayaquil (ID_Hospital = 2)
+        stats['guayaquil'] = {
+            'pacientes': get_count("SELECT COUNT(*) FROM Vista_Paciente WHERE ID_Hospital = 2"),
+            'citas': get_count("SELECT COUNT(*) FROM Vista_Atencion_Medica WHERE ID_Hospital = 2"),
+            'personal_medico': get_count("SELECT COUNT(*) FROM Vista_INF_Personal WHERE ID_Hospital = 2")
+        }
+        
+        print(f"📊 DEBUG: Estadísticas calculadas: {stats}")
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al obtener estadísticas del hospital: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
 
